@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LEA EDU</title>
+    <link rel="shortcut icon" href="https://lea.edu.vn/wp-content/uploads/2023/07/removal.ai_9476a724-4e89-400f-a9e4-e6f4d9c4503d-logo-vector-1.png" type="image/x-icon">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.10.7/dayjs.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" type="text/css"
+        href="https://cdn.jsdelivr.net/gh/lelinh014756/fui-toast-js@master/assets/css/toast@1.0.1/fuiToast.min.css">
+    <script type="text/javascript"
+        src="https://cdn.jsdelivr.net/gh/lelinh014756/fui-toast-js@master/assets/js/toast@1.0.1/fuiToast.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script type="text/javascript" charset="utf8"
+        src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.js"></script>
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <style>
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .transition-all {
+            transition: all 0.3s ease-in-out;
+        }
+        .sticky-header {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background-color: white;
+        }
+
+        .content-wrapper {
+            padding-top: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .sticky-header {
+                position: static;
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 font-sans">
+    <div id="fui-toast"></div>
+    <div class="flex flex-col md:flex-row min-h-screen bg-gray-100">
+
+        <div class="flex-1 p-4 md:p-10">
+            <div class="container mx-auto max-w-8xl">
+                <!-- Header -->
+                <header class="sticky-header bg-white shadow rounded-lg p-4 md:p-6 mb-6">
+                    <div class="flex flex-col md:flex-row justify-between items-center">
+                        <img src="https://lea.edu.vn/wp-content/uploads/2023/07/removal.ai_9476a724-4e89-400f-a9e4-e6f4d9c4503d-logo-vector-1.png" width="100" alt="">
+                      
+                        <div class="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-4">
+                            <div class="flex flex-col md:flex-row items-center space-y-2 md:space-y-0 md:space-x-4">
+                                <input type="date" id="date"
+                                    class="w-full md:w-auto shadow appearance-none border rounded py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0">
+                                <button id="todayButton"
+                                    class="w-full md:w-auto bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded transition duration-300">
+                                    <i class="fas fa-calendar-day mr-2"></i>Hôm nay
+                                </button>
+                            </div>
+                            <button id="refreshButton"
+                                class="w-full md:w-auto py-2 px-4 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-300">
+                                <i class="fas fa-sync-alt mr-2"></i>Làm mới dữ liệu
+                            </button>
+                            <button id="syncButton"
+                                class="w-full md:w-auto py-2 px-4 bg-green-500 text-white rounded hover:bg-green-600 transition duration-300">
+                                <i class="fas fa-cloud-upload-alt mr-2"></i>Lưu điểm danh
+                            </button>
+                        </div>
+                    </div>
+                </header>
+
+                <!-- Date Selector -->
+              
+                <!-- Overview Cards -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6">
+                    <div class="bg-white rounded-lg shadow p-4 md:p-6 fade-in">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-blue-500 bg-opacity-75">
+                                <i class="fas fa-users text-white text-xl md:text-2xl"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="mb-2 text-sm font-medium text-gray-600">Tổng số học viên</p>
+                                <p class="text-lg font-semibold text-gray-700" id="totalStudents">0</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-4 md:p-6 fade-in">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-green-500 bg-opacity-75">
+                                <i class="fas fa-check text-white text-xl md:text-2xl"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="mb-2 text-sm font-medium text-gray-600">Có mặt hôm nay</p>
+                                <p class="text-lg font-semibold text-gray-700" id="presentToday">0</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-4 md:p-6 fade-in">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-yellow-500 bg-opacity-75">
+                                <i class="fas fa-clock text-white text-xl md:text-2xl"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="mb-2 text-sm font-medium text-gray-600">Đi trễ hôm nay</p>
+                                <p class="text-lg font-semibold text-gray-700" id="lateToday">0</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-4 md:p-6 fade-in">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-red-500 bg-opacity-75">
+                                <i class="fas fa-times text-white text-xl md:text-2xl"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="mb-2 text-sm font-medium text-gray-600">Vắng mặt hôm nay</p>
+                                <p class="text-lg font-semibold text-gray-700" id="absentToday">0</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Student List -->
+                <div class="mb-6 bg-white shadow rounded-lg p-4 md:p-6">
+                    <h2 class="text-xl md:text-2xl font-semibold mb-4">Danh sách học viên</h2>
+                    <div id="studentList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                        <!-- Student cards will be populated here -->
+                    </div>
+                </div>
+
+                <!-- Attendance Chart -->
+                <div class="mb-6 bg-white shadow rounded-lg p-4 md:p-6">
+                    <h2 class="text-xl md:text-2xl font-semibold mb-4">Biểu đồ tổng hợp điểm danh</h2>
+                    <div id="attendanceSummaryChart" style="height: 400px;"></div>
+                </div>
+
+                <!-- Attendance Table -->
+                <div class="bg-white shadow rounded-lg p-4 md:p-6">
+                    <h2 class="text-xl md:text-2xl font-semibold mb-4">Bảng lịch sử điểm danh</h2>
+                    <div class="overflow-x-auto">
+                        <table id="attendanceTable" class="min-w-full bg-white">
+                            <thead>
+                                <tr>
+                                    <th class="px-4 py-2 border">Tên KH</th>
+                                    <th class="px-4 py-2 border">Ngày</th>
+                                    <th class="px-4 py-2 border">Thứ</th>
+                                    <th class="px-4 py-2 border">Trạng thái</th>
+
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Rows will be populated dynamically by DataTables -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Constants for AppSheet API
+        const appId = '237238ed-4230-4db1-ab50-e492cea9cdba';
+        const accessKey = 'V2-GAZkd-YsAqg-LBYbc-LRoOQ-2ZFzj-Imfj1-SodbW-9RtwD';
+        const region = 'www';
+
+        let idlop = '';
+        let dataTable;
+        let studentsData = [];
+        let attendanceData = [];
+        let tempAttendanceData = {};
+
+        const DAYS_OF_WEEK = ["Chủ nhật", "Thứ hai", "Thứ ba", "Thứ tư", "Thứ năm", "Thứ sáu", "Thứ bảy"];
+        const ATTENDANCE_STATUSES = {
+            "A - Vắng": { color: '#FFB0B0', label: 'Vắng', icon: 'fas fa-times' },
+            "L - Trễ": { color: '#FCCD2A', label: 'Trễ', icon: 'fas fa-clock' },
+            "M - Có Phép": { color: '#7CF5FF', label: 'Có Phép', icon: 'fas fa-envelope' },
+            "P - Có mặt": { color: '#59d486', label: 'Có mặt', icon: 'fas fa-check' },
+            "S - Nghỉ Luôn": { color: '#D8D2C2', label: 'Nghỉ Luôn', icon: 'fas fa-bed' }
+        };
+
+        // Utility functions
+        const setDefaultDate = () => {
+            const today = dayjs().format('YYYY-MM-DD');
+            document.getElementById('date').value = today;
+        };
+
+        const getDayOfWeek = (day) => DAYS_OF_WEEK[day];
+
+        // API functions
+        async function apiRequest(tableName, action, data, Properties) {
+            const apiUrl = `https://www.appsheet.com/api/v2/apps/${appId}/tables/${tableName}/Action`;
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'ApplicationAccessKey': accessKey,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        Action: action,
+                        ...Properties,
+                        ...data
+                    })
+                }); if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                return await response.json();
+            } catch (error) {
+                console.error("API Error:", error);
+                throw error;
+            }
+        }
+
+        const fetchStudents = async () => {
+            try {
+                const response = await apiRequest('Danh sách học viên', 'Find', {}, {
+                    Properties: { Selector: `Filter(Danh sách học viên, [IDLOP] = "${idlop}")` }
+                });
+
+                studentsData = Array.isArray(response) ? response : [];
+                renderStudentList();
+                updateOverviewCards();
+            } catch (error) {
+                console.error('Error fetching students:', error);
+                studentsData = [];
+            }
+        };
+
+        const fetchAttendance = async () => {
+            try {
+                const response = await apiRequest('DIEMDANHHV', 'Find', {}, {
+                    Properties: { Selector: `Filter(DIEMDANHHV, [IDLOP] = "${idlop}")` }
+                });
+
+                attendanceData = Array.isArray(response) ? response : [];
+                renderAttendanceTable();
+                updateOverviewCards();
+            } catch (error) {
+                console.error('Error fetching attendance:', error);
+                attendanceData = [];
+            }
+        };
+
+        const renderStudentList = () => {
+            const studentListContainer = document.getElementById('studentList');
+            studentListContainer.innerHTML = '';
+
+            studentsData.forEach(student => {
+                const studentCard = document.createElement('div');
+                studentCard.className = 'bg-white shadow-md rounded-lg p-4 transition-all hover:shadow-lg';
+                studentCard.innerHTML = `
+                    <h3 class="text-lg font-semibold mb-2">${student['Tên KH']}</h3>
+                    <p class="text-sm text-gray-600">SĐT: ${student.Sđt}</p>
+                    <p class="text-sm text-gray-600">Ngày sinh: ${student['Ngày sinh']}</p>
+                    <div class="mt-4 flex flex-wrap gap-2">
+                        ${Object.entries(ATTENDANCE_STATUSES).map(([status, { color, label, icon }]) => `
+                            <button class="attendance-btn px-3 py-2 text-sm rounded text-white flex items-center justify-center transition-all" 
+                                    style="background-color: ${color};" 
+                                    data-status="${status}" 
+                                    data-idkh="${student.IDKH}">
+                                <i class="${icon} mr-2"></i>${label}
+                            </button>
+                        `).join('')}
+                    </div>
+                `;
+                studentListContainer.appendChild(studentCard);
+            });
+
+            // Add event listeners to attendance buttons
+            document.querySelectorAll('.attendance-btn').forEach(button => {
+                button.addEventListener('click', function () {
+                    const status = this.getAttribute('data-status');
+                    const idkh = this.getAttribute('data-idkh');
+                    updateTempAttendance(idkh, status);
+                    updateButtonStyles(idkh, status);
+                });
+            });
+        };
+
+        const updateButtonStyles = (idkh, selectedStatus) => {
+            document.querySelectorAll(`.attendance-btn[data-idkh="${idkh}"]`).forEach(button => {
+                const status = button.getAttribute('data-status');
+                if (status === selectedStatus) {
+                    button.style.opacity = '1';
+                    button.style.transform = 'scale(1.05)';
+                } else {
+                    button.style.opacity = '0.5';
+                    button.style.transform = 'scale(1)';
+                }
+            });
+        };
+
+        const updateTempAttendance = (idkh, status) => {
+            const currentDate = document.getElementById('date').value;
+            tempAttendanceData[idkh] = {
+                IDKH: idkh,
+                IDLOP: idlop,
+                NGÀY: currentDate,
+                THỨ: getDayOfWeek(new Date(currentDate).getDay()),
+                'TRẠNG THÁI': status
+            };
+            updateOverviewCards();
+        };
+
+        const renderAttendanceTable = () => {
+            if (dataTable) {
+                dataTable.destroy();
+            }
+
+            dataTable = $('#attendanceTable').DataTable({
+                data: attendanceData,
+                columns: [
+                    { data: 'Tên KH', title: 'Tên KH' },
+                    { data: 'NGÀY', title: 'Ngày' },
+                    { data: 'THỨ', title: 'Thứ' },
+                    {
+                        data: 'TRẠNG THÁI',
+                        title: 'Trạng thái',
+                        render: function (data, type, row) {
+                            const status = ATTENDANCE_STATUSES[data];
+                            return `<span class="px-2 py-1 rounded text-white" style="background-color: ${status.color}">
+                                        <i class="${status.icon} mr-1"></i>${status.label}
+                                    </span>`;
+                        }
+                    }
+                ],
+                order: [[1, 'desc']],
+                responsive: true,
+                language: {
+                    url: 'https://cdn.datatables.net/plug-ins/1.11.5/i18n/vi.json'
+                }
+            });
+
+            $('#attendanceTable').on('click', '.edit-btn', function () {
+                const data = dataTable.row($(this).parents('tr')).data();
+                // Implement edit functionality here
+                console.log('Edit clicked for:', data);
+            });
+        };
+
+        const renderAttendanceSummaryChart = () => {
+            const studentAttendance = {};
+
+            studentsData.forEach(student => {
+                studentAttendance[student['Tên KH']] = Object.keys(ATTENDANCE_STATUSES).reduce((acc, status) => {
+                    acc[status] = 0;
+                    return acc;
+                }, {});
+            });
+
+            attendanceData.forEach(record => {
+                if (studentAttendance[record['Tên KH']] && studentAttendance[record['Tên KH']].hasOwnProperty(record['TRẠNG THÁI'])) {
+                    studentAttendance[record['Tên KH']][record['TRẠNG THÁI']]++;
+                }
+            });
+
+            const categories = Object.keys(studentAttendance);
+            const series = Object.keys(ATTENDANCE_STATUSES).map(status => ({
+                name: ATTENDANCE_STATUSES[status].label,
+                data: categories.map(student => studentAttendance[student][status]),
+                color: ATTENDANCE_STATUSES[status].color
+            }));
+
+            Highcharts.chart('attendanceSummaryChart', {
+                chart: {
+                    type: 'bar'
+                },
+                title: {
+                    text: 'Tổng hợp điểm danh theo học viên'
+                },
+                xAxis: {
+                    categories: categories,
+                    title: {
+                        text: 'Học viên'
+                    }
+                },
+                yAxis: {
+                    min: 0,
+                    title: {
+                        text: 'Số lần điểm danh'
+                    },
+                    stackLabels: {
+                        enabled: true
+                    }
+                },
+                legend: {
+                    reversed: true
+                },
+                plotOptions: {
+                    series: {
+                        stacking: 'normal'
+                    }
+                },
+                series: series
+            });
+        };
+
+        const updateOverviewCards = () => {
+            const today = document.getElementById('date').value;
+            const todayAttendance = [...attendanceData, ...Object.values(tempAttendanceData)]
+                .filter(record => record.NGÀY === today);
+
+            const totalStudents = studentsData.length;
+            const presentToday = todayAttendance.filter(record => record['TRẠNG THÁI'] === 'P - Có mặt').length;
+            const lateToday = todayAttendance.filter(record => record['TRẠNG THÁI'] === 'L - Trễ').length;
+            const absentToday = todayAttendance.filter(record => record['TRẠNG THÁI'] === 'A - Vắng').length;
+
+            document.getElementById('totalStudents').textContent = totalStudents;
+            document.getElementById('presentToday').textContent = presentToday;
+            document.getElementById('lateToday').textContent = lateToday;
+            document.getElementById('absentToday').textContent = absentToday;
+        };
+
+        const syncAttendance = async () => {
+            const syncPromise = new Promise(async (resolve, reject) => {
+                try {
+                    if (Object.keys(tempAttendanceData).length === 0) {
+                        resolve('Không có dữ liệu điểm danh mới để đồng bộ');
+                        return;
+                    }
+
+                    const rows = Object.values(tempAttendanceData).map(({ IDKH, IDLOP, NGÀY, THỨ, 'TRẠNG THÁI': status }) => ({
+                        KEYKH: IDKH,
+                        IDLOP,
+                        NGÀY,
+                        THỨ,
+                        'TRẠNG THÁI': status
+                    }));
+
+                    const response = await apiRequest('DIEMDANHHV', 'Add', { Rows: rows }, { Properties: {} });
+
+                    if (!response || !response.Rows) {
+                        throw new Error('Không nhận được phản hồi hợp lệ từ API');
+                    }
+
+                    console.log(`Đã thêm thành công: ${response.Rows.length} bản ghi`);
+                    tempAttendanceData = {};
+                    await fetchAttendance();
+                    resolve('Đồng bộ dữ liệu điểm danh thành công');
+                } catch (error) {
+                    console.error("Error syncing attendance:", error);
+                    reject(error.message || 'Lỗi không xác định khi đồng bộ dữ liệu');
+                }
+            });
+
+            return FuiToast.promise(
+                syncPromise,
+                {
+                    loading: 'Đang đồng bộ dữ liệu điểm danh...',
+                    success: 'Dữ liệu điểm danh đã được đồng bộ thành công!',
+                    error: (error) => `Lỗi: ${error}. Vui lòng thử lại.`
+                },
+                { isClose: true }
+            );
+        };
+
+        const initializeApp = async () => {
+            setDefaultDate();
+            const urlParams = new URLSearchParams(window.location.search);
+            idlop = urlParams.get('idlop');
+            const initializationPromise = new Promise(async (resolve, reject) => {
+                try {
+                    await Promise.all([fetchStudents(), fetchAttendance()]);
+                    renderAttendanceSummaryChart();
+                    resolve('Khởi tạo dữ liệu thành công');
+                } catch (error) {
+                    console.error("Error during initialization:", error);
+                    reject(error);
+                }
+            });
+            return FuiToast.promise(
+                initializationPromise,
+                {
+                    loading: 'Đang tải dữ liệu...',
+                    success: (data) => {
+                        console.log(data);
+                        return 'Dữ liệu đã được tải thành công!';
+                    },
+                    error: 'Có lỗi xảy ra khi tải dữ liệu. Vui lòng tải lại trang.',
+                },
+                {
+                    isClose: true
+                }
+            );
+        };
+
+        const refreshData = async () => {
+            const refreshPromise = new Promise(async (resolve, reject) => {
+                try {
+                    await Promise.all([fetchStudents(), fetchAttendance()]);
+                    renderAttendanceSummaryChart();
+                    resolve('Dữ liệu đã được làm mới thành công.');
+                } catch (error) {
+                    console.error("Error refreshing data:", error);
+                    reject(error);
+                }
+            });
+
+            return FuiToast.promise(
+                refreshPromise,
+                {
+                    loading: 'Đang làm mới dữ liệu...',
+                    success: (data) => {
+                        console.log(data);
+                        return 'Dữ liệu đã được làm mới thành công!';
+                    },
+                    error: 'Có lỗi xảy ra khi làm mới dữ liệu. Vui lòng thử lại.',
+                },
+                {
+                    isClose: true
+                }
+            );
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeApp();
+
+            document.getElementById('refreshButton').addEventListener('click', refreshData);
+            document.getElementById('syncButton').addEventListener('click', syncAttendance);
+            document.getElementById('todayButton').addEventListener('click', setDefaultDate);
+
+            document.getElementById('date').addEventListener('change', () => {
+                tempAttendanceData = {};
+                document.querySelectorAll('.attendance-btn').forEach(button => {
+                    button.style.opacity = '1';
+                    button.style.transform = 'scale(1)';
+                });
+                updateOverviewCards();
+            });
+
+            // Add event listener for menu toggle
+            const menuToggle = document.getElementById('menuToggle');
+            const sideMenu = document.getElementById('sideMenu');
+            menuToggle.addEventListener('click', () => {
+                sideMenu.classList.toggle('hidden');
+            });
+
+            // Handle responsive behavior
+            const handleResize = () => {
+                if (window.innerWidth >= 768) {
+                    sideMenu.classList.remove('hidden');
+                } else {
+                    sideMenu.classList.add('hidden');
+                }
+            };
+
+            window.addEventListener('resize', handleResize);
+            handleResize(); // Initial check
+        });
+    </script>
+</body>
+
+</html>
