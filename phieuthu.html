@@ -14,7 +14,7 @@
         }
 
         body {
-            font-family: 'Roboto', sans-serif;
+            font-family: 'times new roman', serif;
             line-height: 1;
             margin: 0 auto;
             background-color: #f8f9fa;
@@ -57,7 +57,7 @@
             float: right !important;
             font-size: 9pt;
             line-height: 1.2;
-            color: #495057;
+            color: black;
         }
 
         h2 {
@@ -169,6 +169,7 @@
         .payment-info p:nth-child(1) {
             flex-basis: 45%;
         }
+
         .payment-info p:nth-child(2) {
             flex-basis: 55%;
         }
@@ -176,6 +177,7 @@
         .payment-info p:nth-child(3) {
             flex-basis: 45%;
         }
+
         .payment-info p:nth-child(4) {
             flex-basis: 55%;
         }
@@ -233,10 +235,50 @@
                 transform: rotate(360deg);
             }
         }
+
+        #printButton {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            z-index: 1000;
+        }
+
+        #printButton:hover {
+            background-color: #0056b3;
+        }
+
+        @media print {
+            @page {
+                size: A5 landscape;
+                margin: 0;
+            }
+
+            body {
+                width: 210mm;
+                height: 148mm;
+            }
+
+            .container {
+                box-shadow: none;
+            }
+
+            #printButton {
+                display: none;
+            }
+
+        }
     </style>
 </head>
 
 <body>
+    <button id="printButton">In Phiếu Thu</button>
     <div id="loading-overlay" class="loading-overlay">
         <div class="spinner"></div>
     </div>
@@ -291,9 +333,9 @@
 
         <div class="payment-info">
             <p><strong>Người thu tiền:</strong> <span id="collector"></span></p>
-            <p><strong>Ghi chú:</strong> <span id="note"></span></p>
-            <p><strong>Hình thức thanh toán:</strong> <span id="paymentMethod"></span></p>
             <p><strong>Số tài khoản:</strong> <span id="accountNumber"></span></p>
+            <p><strong>Hình thức thanh toán:</strong> <span id="paymentMethod"></span></p>
+            <p><strong>Ghi chú:</strong> <span id="note"></span></p>
         </div>
 
         <div class="signatures">
@@ -435,9 +477,9 @@
                             let infoText = '';
 
                             if (item['Thông tin']) {
-                                 infoText = ` (${item['Thông tin']})`;
+                                infoText = ` (${item['Thông tin']})`;
                             }
-                           
+
 
                             return `
             <tr>
@@ -464,13 +506,24 @@
                 showError(error.message || "Đã xảy ra lỗi khi lấy dữ liệu phiếu thu.");
             } finally {
                 hideLoading();
+                setTimeout(autoPrint, 500);
             }
+        }
+
+        function autoPrint() {
+            window.print();
+        }
+
+        function printReceipt() {
+            window.print();
         }
 
         // Gọi hàm khi trang được tải
         $(document).ready(() => {
             $('#loading-overlay').hide(); // Ẩn loading ban đầu
             populateReceiptTemplate();
+
+            $('#printButton').on('click', printReceipt);
         });
     </script>
 </body>
