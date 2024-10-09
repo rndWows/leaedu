@@ -5,7 +5,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LEA EDU</title>
-    <link rel="shortcut icon" href="https://lea.edu.vn/wp-content/uploads/2023/07/removal.ai_9476a724-4e89-400f-a9e4-e6f4d9c4503d-logo-vector-1.png" type="image/x-icon">
+    <link rel="shortcut icon"
+        href="https://lea.edu.vn/wp-content/uploads/2023/07/removal.ai_9476a724-4e89-400f-a9e4-e6f4d9c4503d-logo-vector-1.png"
+        type="image/x-icon">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.10.7/dayjs.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -36,6 +38,7 @@
         .transition-all {
             transition: all 0.3s ease-in-out;
         }
+
         .sticky-header {
             position: sticky;
             top: 0;
@@ -64,8 +67,9 @@
                 <!-- Header -->
                 <header class="sticky-header bg-white shadow rounded-lg p-4 md:p-6 mb-6">
                     <div class="flex flex-col md:flex-row justify-between items-center">
-                        <img src="https://lea.edu.vn/wp-content/uploads/2023/07/removal.ai_9476a724-4e89-400f-a9e4-e6f4d9c4503d-logo-vector-1.png" width="100" alt="">
-                      
+                        <img src="https://lea.edu.vn/wp-content/uploads/2023/07/removal.ai_9476a724-4e89-400f-a9e4-e6f4d9c4503d-logo-vector-1.png"
+                            width="100" alt="">
+
                         <div class="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-4">
                             <div class="flex flex-col md:flex-row items-center space-y-2 md:space-y-0 md:space-x-4">
                                 <input type="date" id="date"
@@ -88,7 +92,7 @@
                 </header>
 
                 <!-- Date Selector -->
-              
+
                 <!-- Overview Cards -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6">
                     <div class="bg-white rounded-lg shadow p-4 md:p-6 fade-in">
@@ -137,11 +141,23 @@
                     </div>
                 </div>
 
-                <!-- Student List -->
+                <!-- Student List Table -->
                 <div class="mb-6 bg-white shadow rounded-lg p-4 md:p-6">
                     <h2 class="text-xl md:text-2xl font-semibold mb-4">Danh sách học viên</h2>
-                    <div id="studentList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                        <!-- Student cards will be populated here -->
+                    <div class="overflow-x-auto">
+                        <table id="studentListTable" class="min-w-full bg-white">
+                            <thead>
+                                <tr>
+                                    <th class="px-4 py-2 border">Tên KH</th>
+                                    <th class="px-4 py-2 border">SĐT</th>
+                                    <th class="px-4 py-2 border">Ngày sinh</th>
+                                    <th class="px-4 py-2 border">Điểm danh</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Rows will be populated dynamically -->
+                            </tbody>
+                        </table>
                     </div>
                 </div>
 
@@ -259,30 +275,30 @@
                 attendanceData = [];
             }
         };
-
         const renderStudentList = () => {
-            const studentListContainer = document.getElementById('studentList');
-            studentListContainer.innerHTML = '';
+            const studentListBody = document.querySelector('#studentListTable tbody');
+            studentListBody.innerHTML = '';
 
             studentsData.forEach(student => {
-                const studentCard = document.createElement('div');
-                studentCard.className = 'bg-white shadow-md rounded-lg p-4 transition-all hover:shadow-lg';
-                studentCard.innerHTML = `
-                    <h3 class="text-lg font-semibold mb-2">${student['Tên KH']}</h3>
-                    <p class="text-sm text-gray-600">SĐT: ${student.Sđt}</p>
-                    <p class="text-sm text-gray-600">Ngày sinh: ${student['Ngày sinh']}</p>
-                    <div class="mt-4 flex flex-wrap gap-2">
-                        ${Object.entries(ATTENDANCE_STATUSES).map(([status, { color, label, icon }]) => `
-                            <button class="attendance-btn px-3 py-2 text-sm rounded text-white flex items-center justify-center transition-all" 
-                                    style="background-color: ${color};" 
-                                    data-status="${status}" 
-                                    data-idkh="${student.IDKH}">
-                                <i class="${icon} mr-2"></i>${label}
-                            </button>
-                        `).join('')}
-                    </div>
-                `;
-                studentListContainer.appendChild(studentCard);
+                const row = document.createElement('tr');
+                row.innerHTML = `
+            <td class="border px-4 py-2">${student['Tên KH']}</td>
+            <td class="border px-4 py-2">${student.Sđt}</td>
+            <td class="border px-4 py-2">${student['Ngày sinh']}</td>
+            <td class="border px-4 py-2">
+                <div class="flex flex-wrap gap-2">
+                    ${Object.entries(ATTENDANCE_STATUSES).map(([status, { color, label, icon }]) => `
+                        <button class="attendance-btn px-3 py-2 text-sm rounded text-white flex items-center justify-center transition-all" 
+                                style="background-color: ${color};" 
+                                data-status="${status}" 
+                                data-idkh="${student.IDKH}">
+                            <i class="${icon} mr-2"></i>${label}
+                        </button>
+                    `).join('')}
+                </div>
+            </td>
+        `;
+                studentListBody.appendChild(row);
             });
 
             // Add event listeners to attendance buttons
@@ -456,6 +472,7 @@
                     tempAttendanceData = {};
                     await fetchAttendance();
                     resolve('Đồng bộ dữ liệu điểm danh thành công');
+                    renderAttendanceSummaryChart( );
                 } catch (error) {
                     console.error("Error syncing attendance:", error);
                     reject(error.message || 'Lỗi không xác định khi đồng bộ dữ liệu');
