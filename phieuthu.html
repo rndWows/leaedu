@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phiếu Thu - Trung tâm Ngoại ngữ Liên Âu Mỹ</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap');
+
+        @page {
+            size: A5 landscape;
+            margin: 0;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            line-height: 1;
+            margin: 0 auto;
+            background-color: #f8f9fa;
+            width: 210mm;
+            height: 148mm;
+            box-sizing: border-box;
+        }
+
+        .container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 5mm;
+            height: 93%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            border-bottom: 2px solid #007bff;
+        }
+
+        .logo {
+            font-size: 24pt;
+            font-weight: bold;
+            color: #007bff;
+            margin-right: 5mm;
+        }
+
+        .center-info {
+            font-size: 9pt;
+            line-height: 1.2;
+            color: #495057;
+        }
+
+        h2 {
+            text-align: center;
+            font-size: 18pt;
+            margin: 3mm 0;
+            color: #343a40;
+        }
+
+        .form-row {
+            display: flex;
+            margin-bottom: 1.5mm;
+        }
+
+        .form-row>div {
+            flex: 1;
+            font-size: 10pt;
+        }
+
+        .form-field {
+            min-height: 4mm;
+            margin-left: 2mm;
+            padding: 1mm 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-top: 1.5mm;
+            font-size: 10pt;
+        }
+
+        th,
+        td {
+            border: none;
+            padding: 2mm;
+            text-align: left;
+        }
+
+        th {
+            background-color: #e9ecef;
+            font-weight: bold;
+            color: #495057;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
+        .total-row {
+            font-weight: bold;
+            background-color: #e9ecef;
+        }
+
+        .payment-info {
+            margin-top: 2mm;
+            font-size: 10pt;
+            background-color: #e9ecef;
+            border-radius: 4px;
+            padding: 1.5mm;
+            display: flex;
+            flex-wrap: wrap;
+        }
+
+        .payment-info p {
+            margin: 0.5mm 0;
+            flex-basis: 50%;
+        }
+
+        .signatures {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 1.5mm;
+            text-align: center;
+            font-size: 9pt;
+        }
+
+        .signature {
+            flex: 1;
+            padding: 2mm;
+        }
+
+        .note {
+            font-size: 8pt;
+            margin-top: auto;
+            font-style: italic;
+            color: #6c757d;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="spinner"></div>
+    </div>
+    <div class="container">
+        <div class="header">
+            <div class="logo">Lea</div>
+            <div class="center-info">
+                TRUNG TÂM NGOẠI NGỮ LIÊN ÂU MỸ<br>
+                ĐT: TPK - 0274.3618898 - TU: 0274.3639 995 HN: 0274 65<br>
+                Website: lea.edu.vn
+            </div>
+        </div>
+
+        <h2>PHIẾU THU</h2>
+
+        <div class="form-row">
+            <div><strong>Tên học viên:</strong><span class="form-field" id="studentName"></span></div>
+            <div><strong>Số điện thoại:</strong><span class="form-field" id="phoneNumber"></span></div>
+        </div>
+        <div class="form-row">
+            <div><strong>Chi nhánh:</strong><span class="form-field" id="branch"></span></div>
+            <div><strong>Ngày chứng từ:</strong><span class="form-field" id="documentDate"></span></div>
+        </div>
+
+        <table>
+            <tr>
+                <th>STT</th>
+                <th>Nội dung</th>
+                <th>ĐVT</th>
+                <th>Số lượng</th>
+                <th>Số tiền</th>
+                <th>Ưu đãi</th>
+                <th>Thành tiền</th>
+
+
+            </tr>
+            <tbody id="feeDetails">
+                <!-- Các hàng sẽ được thêm động bằng JavaScript -->
+            </tbody>
+            <tr class="total-row">
+                <td colspan="2">Tổng tiền phải thanh toán:</td>
+                <td id="totalAmount"></td>
+                <td colspan="3">Tổng tiền đã thanh toán:</td>
+                <td id="tienthanhtoan"></td>
+            </tr>
+        </table>
+
+        <div class="payment-info">
+            <p><strong>Người thu tiền:</strong> <span id="collector"></span></p>
+            <p><strong>Ghi chú:</strong> <span id="note"></span></p>
+            <p><strong>Hình thức thanh toán:</strong> <span id="paymentMethod"></span></p>
+            <p><strong>Số tài khoản:</strong> <span id="accountNumber"></span></p>
+        </div>
+
+        <div class="signatures">
+            <div class="signature">
+                NGƯỜI LẬP PHIẾU<br>
+                (Ký, ghi rõ họ tên)
+            </div>
+            <div class="signature">
+                NGƯỜI NỘP TIỀN<br>
+                (Ký, ghi rõ họ tên)
+            </div>
+            <div class="signature">
+                THỦ TRƯỞNG ĐƠN VỊ<br>
+                (Ký, ghi rõ họ tên)
+            </div>
+        </div>
+
+        <div class="note">
+            * Trung tâm sẽ không hoàn lại học phí trong bất kỳ trường hợp nào.<br>
+            * Các trường hợp đặc biệt, học phí sẽ được xem xét bảo lưu trong thời gian một khóa
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+
+    <script>
+
+        // Hàm để lấy tham số từ URL
+        function getUrlParameter(name) {
+            name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+            var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+            var results = regex.exec(location.search);
+            return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+        }
+
+        const appId = '237238ed-4230-4db1-ab50-e492cea9cdba';
+        const apiKey = 'V2-GAZkd-YsAqg-LBYbc-LRoOQ-2ZFzj-Imfj1-SodbW-9RtwD';
+
+        async function apiRequest(tableName, action, data) {
+            const apiUrl = `https://www.appsheet.com/api/v2/apps/${appId}/tables/${tableName}/Action`;
+            console.log(`Gửi yêu cầu đến ${apiUrl}`, data);
+            try {
+                const response = await $.ajax({
+                    url: apiUrl,
+                    method: 'POST',
+                    headers: {
+                        'ApplicationAccessKey': apiKey,
+                        'Content-Type': 'application/json'
+                    },
+                    data: JSON.stringify({
+                        Action: action,
+                        Properties: {
+                            Locale: 'vi-VN',
+                            Timezone: 'Asia/Ho_Chi_Minh'
+                        },
+                        ...data
+                    })
+                });
+                console.log(`Phản hồi từ ${tableName}:`, response);
+                return response;
+            } catch (error) {
+                console.error(`Lỗi yêu cầu API cho ${tableName}:`, error);
+                throw error;
+            }
+        }
+
+        function showError(message) {
+            console.error(message);
+            alert(message);
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('vi-VN');
+        }
+
+        // Hàm định dạng tiền tệ
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+        }
+
+        function showLoading() {
+            $('#loading-overlay').show();
+        }
+
+        function hideLoading() {
+            $('#loading-overlay').hide();
+        }
+
+        async function populateReceiptTemplate() {
+            showLoading();
+            try {
+                const maPT = getUrlParameter('IDphieuthu');
+                if (!maPT) {
+                    throw new Error('Không tìm thấy mã phiếu thu trong URL.');
+                }
+
+                // Lấy thông tin phiếu thu
+                const idPhieuThuResponse = await apiRequest('Phieuthu', 'Find', {
+                    Selector: `Filter(Phieuthu,[IDphieuthu] = '${maPT}')`
+                });
+
+                if (idPhieuThuResponse && Array.isArray(idPhieuThuResponse)) {
+                    // Tìm chính xác bản ghi khớp với IDphieuthu
+                    const idPhieuThuData = idPhieuThuResponse.find(record => record.IDphieuthu === maPT);
+
+                    if (idPhieuThuData) {
+                        // Điền thông tin phiếu thu
+                        $('#studentName').text(idPhieuThuData['Tên KH'] || '');
+                        $('#phoneNumber').text(idPhieuThuData['Số tiền'] || '');
+                        $('#branch').text(idPhieuThuData['Chi nhánh'] || '');
+                        $('#documentDate').text(formatDate(idPhieuThuData['Ngày chứng từ']));
+                        $('#collector').text(idPhieuThuData['Người thu tiền'] || '');
+                        $('#note').text(idPhieuThuData['Ghi chú'] || '');
+                        $('#paymentMethod').text(idPhieuThuData['Hình thức thanh toán'] || '');
+                        $('#accountNumber').text(idPhieuThuData['Số tài khoản'] || '');
+                        $('#tienthanhtoan').text(formatCurrency(idPhieuThuData['Số tiền thanh toán'] || 0));
+
+                        // Lấy chi tiết phiếu thu từ PhieuThuDe
+                        const feeDetailsResponse = await apiRequest('PhieuThuDe', 'Find', {
+                            Selector: `Filter(PhieuThuDe,[IDphieuthu] = '${maPT}')`
+                        });
+
+                        if (feeDetailsResponse && Array.isArray(feeDetailsResponse)) {
+                            // Lọc chỉ những mục có IDphieuthu khớp với maPT
+                            const filteredDetails = feeDetailsResponse.filter(item => item.IDphieuthu === maPT);
+
+                            if (filteredDetails.length > 0) {
+                                let totalAmount = 0;
+                                const feeDetailsHtml = filteredDetails.map((item, index) => {
+                                    const amount = parseFloat(item['Thành tiền'] || 0);
+                                    totalAmount += amount;
+                                    return `
+                                <tr>
+                                    <td>${index + 1}</td>
+                                    <td>${item.Ma_HHDV || ''}</td>
+                                    <td>${item['Đơn vị tính'] || ''}</td>
+                                    <td>${item['Số lượng'] || ''}</td>
+                                    <td>${formatCurrency(parseFloat(item['Số tiền'] || 0))}</td>
+                                    <td>${formatCurrency(parseFloat(item['Tổng tiền UĐ'] || 0))}</td>
+                                    <td>${formatCurrency(amount)}</td>
+                                </tr>
+                            `;
+                                }).join('');
+
+                                $('#feeDetails').html(feeDetailsHtml);
+                                $('#totalAmount').text(formatCurrency(totalAmount));
+                            } else {
+                                throw new Error(`Không tìm thấy chi tiết phiếu thu với mã ${maPT}.`);
+                            }
+                        } else {
+                            throw new Error("Không nhận được dữ liệu chi tiết phí hợp lệ.");
+                        }
+                    } else {
+                        throw new Error(`Không tìm thấy phiếu thu với mã ${maPT}.`);
+                    }
+                } else {
+                    throw new Error("Không nhận được dữ liệu phiếu thu hợp lệ.");
+                }
+            } catch (error) {
+                console.error("Lỗi khi lấy dữ liệu:", error);
+                showError(error.message || "Đã xảy ra lỗi khi lấy dữ liệu phiếu thu.");
+            } finally {
+                hideLoading(); // Ẩn loading khi kết thúc, dù thành công hay thất bại
+            }
+        }
+
+        // Gọi hàm khi trang được tải
+        $(document).ready(() => {
+            $('#loading-overlay').hide(); // Ẩn loading ban đầu
+            populateReceiptTemplate();
+        });
+    </script>
+</body>
+
+</html>
