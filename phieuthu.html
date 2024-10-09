@@ -37,6 +37,8 @@
             display: flex;
             align-items: center;
             border-bottom: 2px solid #007bff;
+            justify-content: space-between;
+            margin-bottom: 10px;
         }
 
         .logo {
@@ -52,6 +54,7 @@
 
 
         .center-info {
+            float: right !important;
             font-size: 9pt;
             line-height: 1.2;
             color: #495057;
@@ -59,8 +62,8 @@
 
         h2 {
             text-align: center;
-            font-size: 18pt;
-            margin: 3mm 0;
+            font-size: 28pt;
+            margin: 0;
             color: #343a40;
         }
 
@@ -163,6 +166,22 @@
             flex-basis: 50%;
         }
 
+        .payment-info p:nth-child(1) {
+            flex-basis: 45%;
+        }
+        .payment-info p:nth-child(2) {
+            flex-basis: 55%;
+        }
+
+        .payment-info p:nth-child(3) {
+            flex-basis: 45%;
+        }
+        .payment-info p:nth-child(4) {
+            flex-basis: 55%;
+        }
+
+
+
         .signatures {
             display: flex;
             justify-content: space-between;
@@ -226,6 +245,7 @@
             <div class="logo">
                 <img src="https://rndwows.github.io/leaedu/lea.png" alt="Lea Logo" />
             </div>
+            <h2>PHIẾU THU</h2>
             <div class="center-info">
                 TRUNG TÂM NGOẠI NGỮ LIÊN ÂU MỸ<br>
                 ĐT: TPK - 0274.3618898 - TU: 0274.3639 995 HN: 0274 65<br>
@@ -233,7 +253,7 @@
             </div>
         </div>
 
-        <h2>PHIẾU THU</h2>
+
 
         <div class="form-row">
             <div><strong>Tên học viên:</strong><span class="form-field" id="studentName"></span></div>
@@ -260,15 +280,14 @@
             <tbody id="feeDetails">
                 <!-- Các hàng sẽ được thêm động bằng JavaScript -->
             </tbody>
-            <tfoot>
-                <tr class="total-row">
-                    <td colspan="2">Tổng tiền phải thanh toán:</td>
-                    <td id="totalAmount"></td>
-                    <td colspan="2">Tổng tiền đã thanh toán:</td>
-                    <td id="tienthanhtoan"></td>
-                </tr>
-            </tfoot>
         </table>
+
+        <div class="payment-info">
+            <p><strong>Tổng tiền ưu đãi:</strong> <span id="tienuudai"></span></p>
+            <p><strong>Tổng tiền đã thanh toán:</strong> <span id="tienthanhtoan"></span></p>
+            <p><strong>Tổng tiền phải thanh toán:</strong> <span id="totalAmount"></span></p>
+            <p><strong>Số tiền còn lại:</strong> <span id="tienconlai"></span></p>
+        </div>
 
         <div class="payment-info">
             <p><strong>Người thu tiền:</strong> <span id="collector"></span></p>
@@ -373,73 +392,78 @@
                     throw new Error('Không tìm thấy mã phiếu thu trong URL.');
                 }
 
-                // Lấy thông tin phiếu thu
-                const idPhieuThuResponse = await apiRequest('Phieuthu', 'Find', {
-                    Selector: `Filter(Phieuthu,[IDphieuthu] = '${maPT}')`
-                });
+                // Gọi đồng thời cả hai API
+                const [phieuThuResponse, feeDetailsResponse] = await Promise.all([
+                    apiRequest('Phieuthu', 'Find', {
+                        Selector: `Filter(Phieuthu,[IDphieuthu] = '${maPT}')`
+                    }),
+                    apiRequest('PhieuThuDe', 'Find', {
+                        Selector: `Filter(PhieuThuDe,[IDphieuthu] = '${maPT}')`
+                    })
+                ]);
 
-                if (idPhieuThuResponse && Array.isArray(idPhieuThuResponse)) {
-                    // Tìm chính xác bản ghi khớp với IDphieuthu
-                    const idPhieuThuData = idPhieuThuResponse.find(record => record.IDphieuthu === maPT);
-
+                // Xử lý dữ liệu Phieuthu
+                if (phieuThuResponse && Array.isArray(phieuThuResponse)) {
+                    const idPhieuThuData = phieuThuResponse.find(record => record.IDphieuthu === maPT);
                     if (idPhieuThuData) {
-                        // Điền thông tin phiếu thu
                         $('#studentName').text(idPhieuThuData['Tên KH'] || '');
                         $('#phoneNumber').text(idPhieuThuData.SDT || '');
                         $('#branch').text(idPhieuThuData['Chi nhánh'] || '');
                         $('#documentDate').text(formatDate(idPhieuThuData['Ngày chứng từ']));
-
                         $('#collector').text(idPhieuThuData['Người thu tiền'] || '');
                         $('#note').text(idPhieuThuData['Ghi chú'] || '');
                         $('#paymentMethod').text(idPhieuThuData['Hình thức thanh toán'] || '');
                         $('#accountNumber').text(idPhieuThuData['Số tài khoản'] || '');
                         $('#tienthanhtoan').text(formatCurrency(idPhieuThuData['Số tiền thanh toán'] || 0));
-
-                        // Lấy chi tiết phiếu thu từ PhieuThuDe
-                        const feeDetailsResponse = await apiRequest('PhieuThuDe', 'Find', {
-                            Selector: `Filter(PhieuThuDe,[IDphieuthu] = '${maPT}')`
-                        });
-
-                        if (feeDetailsResponse && Array.isArray(feeDetailsResponse)) {
-                            // Lọc chỉ những mục có IDphieuthu khớp với maPT
-                            const filteredDetails = feeDetailsResponse.filter(item => item.IDphieuthu === maPT);
-
-                            if (filteredDetails.length > 0) {
-                                let totalAmount = 0;
-                                const feeDetailsHtml = filteredDetails.map((item, index) => {
-                                    const amount = parseFloat(item['Thành tiền'] || 0);
-                                    totalAmount += amount;
-                                    return `
-                                <tr>
-                                    <td>${index + 1}</td>
-                                    <td>${item.Ma_HHDV || ''} (${item['Thông tin'] || 'Chưa có thông tin'})</td>
-                                    <td>${item['Số lượng'] || ''} / ${item['Đơn vị tính'] || ''}</td>
-                                    <td>${formatCurrency(parseFloat(item['Số tiền'] || 0))}</td>
-                                    <td>${formatCurrency(parseFloat(item['Tổng tiền UĐ'] || 0))}</td>
-                                    <td>${formatCurrency(amount)}</td>
-                                </tr>
-                            `;
-                                }).join('');
-
-                                $('#feeDetails').html(feeDetailsHtml);
-                                $('#totalAmount').text(formatCurrency(totalAmount));
-                            } else {
-                                throw new Error(`Không tìm thấy chi tiết phiếu thu với mã ${maPT}.`);
-                            }
-                        } else {
-                            throw new Error("Không nhận được dữ liệu chi tiết phí hợp lệ.");
-                        }
+                        $('#tienuudai').text(formatCurrency(idPhieuThuData['Tiền ưu đãi'] || 0));
+                        $('#tienconlai').text(formatCurrency(idPhieuThuData['Tiền còn lại'] || 0));
                     } else {
                         throw new Error(`Không tìm thấy phiếu thu với mã ${maPT}.`);
                     }
                 } else {
                     throw new Error("Không nhận được dữ liệu phiếu thu hợp lệ.");
                 }
+
+                // Xử lý dữ liệu PhieuThuDe
+                if (feeDetailsResponse && Array.isArray(feeDetailsResponse)) {
+                    const filteredDetails = feeDetailsResponse.filter(item => item.IDphieuthu === maPT);
+                    if (filteredDetails.length > 0) {
+                        let totalAmount = 0;
+                        const feeDetailsHtml = filteredDetails.map((item, index) => {
+                            const amount = parseFloat(item['Thành tiền'] || 0);
+                            totalAmount += amount;
+                            let infoText = '';
+
+                            if (item['Thông tin']) {
+                                 infoText = ` (${item['Thông tin']})`;
+                            }
+                           
+
+                            return `
+            <tr>
+                <td>${index + 1}</td>
+                <td>${item.Ma_HHDV || ''}${infoText}</td>
+                <td>${item['Số lượng'] || ''} ${item['Đơn vị tính'] ? '/ ' + item['Đơn vị tính'] : ''}</td>
+                <td>${formatCurrency(parseFloat(item['Số tiền'] || 0))}</td>
+                <td>${formatCurrency(parseFloat(item['Tổng tiền UĐ'] || 0))}</td>
+                <td>${formatCurrency(amount)}</td>
+            </tr>
+        `;
+                        }).join('');
+
+                        $('#feeDetails').html(feeDetailsHtml);
+                        $('#totalAmount').text(formatCurrency(totalAmount));
+                    } else {
+                        throw new Error(`Không tìm thấy chi tiết phiếu thu với mã ${maPT}.`);
+                    }
+                } else {
+                    throw new Error("Không nhận được dữ liệu chi tiết phí hợp lệ.");
+                }
             } catch (error) {
                 console.error("Lỗi khi lấy dữ liệu:", error);
                 showError(error.message || "Đã xảy ra lỗi khi lấy dữ liệu phiếu thu.");
             } finally {
-                hideLoading(); // Ẩn loading khi kết thúc, dù thành công hay thất bại
+                hideLoading();
             }
         }
 
