@@ -40,11 +40,16 @@
         }
 
         .logo {
-            font-size: 24pt;
-            font-weight: bold;
-            color: #007bff;
-            margin-right: 5mm;
+            width: 60px;
+            margin: 5px 20px;
+            text-align: center;
         }
+
+        .logo img {
+            max-width: 100%;
+            height: auto;
+        }
+
 
         .center-info {
             font-size: 9pt;
@@ -81,7 +86,45 @@
             border-spacing: 0;
             margin-top: 1.5mm;
             font-size: 10pt;
+            table-layout: fixed;
         }
+
+        th:nth-child(1),
+        td:nth-child(1) {
+            width: 5%;
+        }
+
+        /* STT */
+        th:nth-child(2),
+        td:nth-child(2) {
+            width: 30%;
+        }
+
+        /* Nội dung */
+        th:nth-child(3),
+        td:nth-child(3) {
+            width: 15%;
+        }
+
+        /* Số lượng / ĐVT */
+        th:nth-child(4),
+        td:nth-child(4) {
+            width: 15%;
+        }
+
+        /* Số tiền */
+        th:nth-child(5),
+        td:nth-child(5) {
+            width: 15%;
+        }
+
+        /* Ưu đãi */
+        th:nth-child(6),
+        td:nth-child(6) {
+            width: 15%;
+        }
+
+        /* Thành tiền */
 
         th,
         td {
@@ -180,7 +223,9 @@
     </div>
     <div class="container">
         <div class="header">
-            <div class="logo">Lea</div>
+            <div class="logo">
+                <img src="https://rndwows.github.io/leaedu/lea.png" alt="Lea Logo" />
+            </div>
             <div class="center-info">
                 TRUNG TÂM NGOẠI NGỮ LIÊN ÂU MỸ<br>
                 ĐT: TPK - 0274.3618898 - TU: 0274.3639 995 HN: 0274 65<br>
@@ -200,26 +245,29 @@
         </div>
 
         <table>
-            <tr>
-                <th>STT</th>
-                <th>Nội dung</th>
-                <th>ĐVT</th>
-                <th>Số lượng</th>
-                <th>Số tiền</th>
-                <th>Ưu đãi</th>
-                <th>Thành tiền</th>
+            <thead>
+                <tr>
+                    <th>STT</th>
+                    <th>Nội dung</th>
+                    <th>Số lượng / ĐVT</th>
+                    <th>Số tiền</th>
+                    <th>Ưu đãi</th>
+                    <th>Thành tiền</th>
 
 
-            </tr>
+                </tr>
+            </thead>
             <tbody id="feeDetails">
                 <!-- Các hàng sẽ được thêm động bằng JavaScript -->
             </tbody>
-            <tr class="total-row">
-                <td colspan="2">Tổng tiền phải thanh toán:</td>
-                <td id="totalAmount"></td>
-                <td colspan="3">Tổng tiền đã thanh toán:</td>
-                <td id="tienthanhtoan"></td>
-            </tr>
+            <tfoot>
+                <tr class="total-row">
+                    <td colspan="2">Tổng tiền phải thanh toán:</td>
+                    <td id="totalAmount"></td>
+                    <td colspan="2">Tổng tiền đã thanh toán:</td>
+                    <td id="tienthanhtoan"></td>
+                </tr>
+            </tfoot>
         </table>
 
         <div class="payment-info">
@@ -245,7 +293,7 @@
         </div>
 
         <div class="note">
-            * Trung tâm sẽ không hoàn lại học phí trong bất kỳ trường hợp nào.<br>
+            * Trung tâm sẽ không hoàn lại học phí trong bất kỳ trường hợp nào.
             * Các trường hợp đặc biệt, học phí sẽ được xem xét bảo lưu trong thời gian một khóa
         </div>
     </div>
@@ -337,9 +385,10 @@
                     if (idPhieuThuData) {
                         // Điền thông tin phiếu thu
                         $('#studentName').text(idPhieuThuData['Tên KH'] || '');
-                        $('#phoneNumber').text(idPhieuThuData['Số tiền'] || '');
+                        $('#phoneNumber').text(idPhieuThuData.SDT || '');
                         $('#branch').text(idPhieuThuData['Chi nhánh'] || '');
                         $('#documentDate').text(formatDate(idPhieuThuData['Ngày chứng từ']));
+
                         $('#collector').text(idPhieuThuData['Người thu tiền'] || '');
                         $('#note').text(idPhieuThuData['Ghi chú'] || '');
                         $('#paymentMethod').text(idPhieuThuData['Hình thức thanh toán'] || '');
@@ -363,9 +412,8 @@
                                     return `
                                 <tr>
                                     <td>${index + 1}</td>
-                                    <td>${item.Ma_HHDV || ''}</td>
-                                    <td>${item['Đơn vị tính'] || ''}</td>
-                                    <td>${item['Số lượng'] || ''}</td>
+                                    <td>${item.Ma_HHDV || ''} (${item['Thông tin'] || 'Chưa có thông tin'})</td>
+                                    <td>${item['Số lượng'] || ''} / ${item['Đơn vị tính'] || ''}</td>
                                     <td>${formatCurrency(parseFloat(item['Số tiền'] || 0))}</td>
                                     <td>${formatCurrency(parseFloat(item['Tổng tiền UĐ'] || 0))}</td>
                                     <td>${formatCurrency(amount)}</td>
