@@ -17,6 +17,7 @@
     <script src="https://code.highcharts.com/modules/export-data.js"></script>
     <script src="https://code.highcharts.com/modules/accessibility.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -113,6 +114,26 @@
                             <option value="">Tất cả</option>
                         </select>
                     </div>
+                    <div>
+                        <label for="salesFilter"
+                            class="block text-sm font-medium text-gray-700 dark:text-gray-300">Sales Phụ Trách</label>
+                        <select id="salesFilter"
+                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                            <option value="">Tất cả</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="startDate" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Từ
+                            ngày</label>
+                        <input type="date" id="startDate"
+                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label for="endDate" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Đến
+                            ngày</label>
+                        <input type="date" id="endDate"
+                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                    </div>
                     <!-- Add other filter inputs here -->
                     <div class="flex space-x-2">
                         <button id="applyFilters"
@@ -148,7 +169,8 @@
                                         Tổng số khách hàng
                                     </dt>
                                     <dd>
-                                        <div class="text-lg font-medium text-gray-900 dark:text-white">
+                                        <div id="totalCustomers"
+                                            class="text-lg font-medium text-gray-900 dark:text-white">
                                             0
                                         </div>
                                     </dd>
@@ -170,7 +192,8 @@
                                         Tổng số học viên
                                     </dt>
                                     <dd>
-                                        <div class="text-lg font-medium text-gray-900 dark:text-white">
+                                        <div id="totalStudents"
+                                            class="text-lg font-medium text-gray-900 dark:text-white">
                                             0
                                         </div>
                                     </dd>
@@ -192,7 +215,8 @@
                                         Doanh thu
                                     </dt>
                                     <dd>
-                                        <div class="text-lg font-medium text-gray-900 dark:text-white">
+                                        <div id="totalRevenue"
+                                            class="text-lg font-medium text-gray-900 dark:text-white">
                                             0
                                         </div>
                                     </dd>
@@ -214,7 +238,8 @@
                                         Lớp đang hoạt động
                                     </dt>
                                     <dd>
-                                        <div class="text-lg font-medium text-gray-900 dark:text-white">
+                                        <div id="activeClasses"
+                                            class="text-lg font-medium text-gray-900 dark:text-white">
                                             0
                                         </div>
                                     </dd>
@@ -236,7 +261,8 @@
                                         Số lần chăm sóc khách hàng
                                     </dt>
                                     <dd>
-                                        <div class="text-lg font-medium text-gray-900 dark:text-white">
+                                        <div id="customerCareCount"
+                                            class="text-lg font-medium text-gray-900 dark:text-white">
                                             0
                                         </div>
                                     </dd>
@@ -270,242 +296,359 @@
                         <div id="revenueChart" style="height: 400px;"></div>
                     </div>
                 </div>
-                <!-- Add more chart sections if needed -->
             </div>
         </main>
     </div>
     <script>
-        const appId = '237238ed-4230-4db1-ab50-e492cea9cdba';
-        const accessKey = 'V2-GAZkd-YsAqg-LBYbc-LRoOQ-2ZFzj-Imfj1-SodbW-9RtwD';
-        const region = 'www';
-
-        let dskh = []
-
-        // DOM elements
-        const darkModeToggle = document.getElementById('darkModeToggle');
-        const htmlElement = document.documentElement;
-
-
-        // Utility functions
-        const formatCurrency = amount => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
-        const formatDate = dateString => {
-            const date = new Date(dateString);
-            return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+        // Constants
+        const API = {
+            appId: '237238ed-4230-4db1-ab50-e492cea9cdba',
+            accessKey: 'V2-GAZkd-YsAqg-LBYbc-LRoOQ-2ZFzj-Imfj1-SodbW-9RtwD',
+            region: 'www'
         };
 
-        // Dark mode toggle
-        function toggleDarkMode() {
-            htmlElement.classList.toggle('dark');
-            localStorage.setItem('darkMode', htmlElement.classList.contains('dark'));
-            updateDarkModeIcon();
-        }
+        // DOM elements
+        const DOM = {
+            darkModeToggle: document.getElementById('darkModeToggle'),
+            htmlElement: document.documentElement,
+            nguonTiepnhanFilter: document.getElementById('nguonTiepnhanFilter'),
+            salesFilter: document.getElementById('salesFilter'),
+            startDateFilter: document.getElementById('startDate'),
+            endDateFilter: document.getElementById('endDate'),
+            applyFiltersButton: document.getElementById('applyFilters'),
+            resetFiltersButton: document.getElementById('resetFilters'),
+            exportExcelButton: document.getElementById('exportExcel')
+        };
 
-        function updateDarkModeIcon() {
-            darkModeToggle.innerHTML = htmlElement.classList.contains('dark')
-                ? '<i class="fas fa-sun"></i>'
-                : '<i class="fas fa-moon"></i>';
-        }
+        // State
+        let state = {
+            dskh: [],
+            doanhthu: [],
+            filteredData: [],
+            filteredDoanhthu: []
+        };
 
-        // API request function
-        async function apiRequest(tableName, action, data, Properties) {
-            const apiUrl = `https://${region}.appsheet.com/api/v2/apps/${appId}/tables/${tableName}/Action`;
-            try {
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: {
-                        'ApplicationAccessKey': accessKey,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        Action: action,
-                        ...Properties,
-                        ...data
-                    })
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                return await response.json();
-            } catch (error) {
-                console.error("API Error:", error);
-                throw error;
-            }
-        }
-
-        // Fetch data from API
-        async function getdskh() {
-
-
-            try {
-                const response = await apiRequest('KHCN', 'Find', {}, {
-                    Properties: { Selector: `Filter(KHCN, true)` }
-                });
-                if (!Array.isArray(response) || response.length === 0) {
-                    throw new Error("Invalid data received from API");
-                }
-                return response;
-            } catch (error) {
-                console.error("Error fetching data from AppSheet:", error);
-                throw error;
-            }
-        }
-        // Utility function to get random data
-        function getRandomData(count, max) {
-            return Array.from({ length: count }, () => Math.floor(Math.random() * max));
-        }
-
-
-
-        // Utility function to get random data
-        function getRandomData(count, max) {
-            return Array.from({ length: count }, () => Math.floor(Math.random() * max));
-        }
-
-        // Chart 1: Biểu đồ phát sinh khách hàng theo thời gian
-        function createCustomerGrowthChart() {
-            Highcharts.chart('customerGrowthChart', {
-                chart: {
-                    type: 'area'
-                },
-                title: {
-                    text: 'Biểu đồ phát sinh khách hàng theo thời gian'
-                },
-                xAxis: {
-                    categories: ['Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5' , 'Tháng 6' , 'Tháng 7' , 'Tháng 8' , 'Tháng 9' , 'Tháng 10' , 'Tháng 11' , 'Tháng 12'],
-                    tickmarkPlacement: 'on',
-                    title: {
-                        enabled: false
-                    }
-                },
-                yAxis: {
-                    title: {
-                        text: 'Số lượng khách hàng'
-                    }
-                },
-                tooltip: {
-                    split: true,
-                    valueSuffix: ' khách hàng'
-                },
-                plotOptions: {
-                    area: {
-                        stacking: 'normal',
-                        lineColor: '#666666',
-                        lineWidth: 1,
-                        marker: {
-                            lineWidth: 1,
-                            lineColor: '#666666'
+        // Utility functions
+        const utils = {
+            formatCurrency: amount => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount),
+            formatDate: dateString => {
+                const date = new Date(dateString);
+                return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+            },
+            formatDateForHighcharts: dateString => {
+                const [day, month, year] = dateString.split('/');
+                return Date.UTC(parseInt(year), parseInt(month) - 1, 1);
+            },
+            groupDataByMonth: (data, dateKey, valueKey = null) => {
+                return data.reduce((acc, item) => {
+                    if (item[dateKey] && item[dateKey].trim() !== '') {
+                        const date = utils.formatDateForHighcharts(item[dateKey]);
+                        if (valueKey) {
+                            acc[date] = (acc[date] || 0) + parseFloat(item[valueKey] || 0);
+                        } else {
+                            acc[date] = (acc[date] || 0) + 1;
                         }
                     }
-                },
-                series: [{
-                    name: 'Khách hàng mới',
-                    data: getRandomData(12, 100)
-                }, {
-                    name: 'Đã chốt',
-                    data: getRandomData(12, 50)
-                }]
-            });
-        }
+                    return acc;
+                }, {});
+            },
+        };
 
-        // Chart 2: Học viên phát sinh
-        function createStudentGrowthChart() {
-            Highcharts.chart('studentGrowthChart', {
-                chart: {
-                    type: 'column'
-                },
-                title: {
-                    text: 'Học viên phát sinh'
-                },
-                xAxis: {
-                    categories: ['Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5' , 'Tháng 6' , 'Tháng 7' , 'Tháng 8' , 'Tháng 9' , 'Tháng 10' , 'Tháng 11' , 'Tháng 12'],
-                    crosshair: true
-                },
-                yAxis: {
-                    min: 0,
-                    title: {
-                        text: 'Số lượng học viên'
-                    }
-                },
-                tooltip: {
-                    headerFormat: '<span style="font-size:10px">{point.key}</span><table>',
-                    pointFormat: '<tr><td style="color:{series.color};padding:0">{series.name}: </td>' +
-                        '<td style="padding:0"><b>{point.y} học viên</b></td></tr>',
-                    footerFormat: '</table>',
-                    shared: true,
-                    useHTML: true
-                },
-                plotOptions: {
-                    column: {
-                        pointPadding: 0.2,
-                        borderWidth: 0
-                    }
-                },
-                series: [{
-                    name: 'Học viên mới',
-                    data: getRandomData(12, 80)
-                }, {
-                    name: 'Học viên tiếp tục',
-                    data: getRandomData(12, 120)
-                }]
-            });
-        }
+        // Dark mode functions
+        const darkMode = {
+            toggle: () => {
+                DOM.htmlElement.classList.toggle('dark');
+                localStorage.setItem('darkMode', DOM.htmlElement.classList.contains('dark'));
+                darkMode.updateIcon();
+            },
+            updateIcon: () => {
+                DOM.darkModeToggle.innerHTML = DOM.htmlElement.classList.contains('dark')
+                    ? '<i class="fas fa-sun"></i>'
+                    : '<i class="fas fa-moon"></i>';
+            },
+            init: () => {
+                if (localStorage.getItem('darkMode') === 'true') {
+                    DOM.htmlElement.classList.add('dark');
+                }
+                darkMode.updateIcon();
+            }
+        };
 
-        // Chart 3: Biểu đồ doanh thu lợi nhuận
-        function createRevenueChart() {
-            Highcharts.chart('revenueChart', {
-                chart: {
-                    type: 'line'
-                },
-                title: {
-                    text: 'Biểu đồ doanh thu lợi nhuận'
-                },
-                xAxis: {
-                    categories: ['Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5' , 'Tháng 6' , 'Tháng 7' , 'Tháng 8' , 'Tháng 9' , 'Tháng 10' , 'Tháng 11' , 'Tháng 12']
-
-                },
-                yAxis: {
-                    title: {
-                        text: 'Số tiền (VNĐ)'
-                    }
-                },
-                plotOptions: {
-                    line: {
-                        dataLabels: {
-                            enabled: true,
-                            format: '{point.y:,.0f} VNĐ'
+        // API functions
+        const api = {
+            request: async (tableName, action, data, Properties) => {
+                const apiUrl = `https://${API.region}.appsheet.com/api/v2/apps/${API.appId}/tables/${tableName}/Action`;
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: {
+                            'ApplicationAccessKey': API.accessKey,
+                            'Content-Type': 'application/json'
                         },
-                        enableMouseTracking: false
+                        body: JSON.stringify({
+                            Action: action,
+                            ...Properties,
+                            ...data
+                        })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
                     }
-                },
-                series: [{
-                    name: 'Doanh thu',
-                    data: getRandomData(12, 1000000000).map(x => x * 1000)
-                }, {
-                    name: 'Lợi nhuận',
-                    data: getRandomData(12, 500000000).map(x => x * 1000)
+
+                    return await response.json();
+                } catch (error) {
+                    console.error("API Error:", error);
+                    throw error;
+                }
+            },
+            getData: async (tableName) => {
+                try {
+                    const response = await api.request(tableName, 'Find', {}, {
+                        Properties: { Selector: `Filter(${tableName}, true)` }
+                    });
+                    if (!Array.isArray(response) || response.length === 0) {
+                        throw new Error("Invalid data received from API");
+                    }
+                    return response;
+                } catch (error) {
+                    console.error(`Error fetching ${tableName} data from AppSheet:`, error);
+                    throw error;
+                }
+            }
+        };
+
+        // Data processing functions
+        const dataProcessing = {
+            filterData: () => {
+                const nguonTiepnhan = DOM.nguonTiepnhanFilter.value;
+                const sales = DOM.salesFilter.value;
+                const startDate = DOM.startDateFilter.value;
+                const endDate = DOM.endDateFilter.value;
+
+                state.filteredData = state.dskh.filter(item => {
+                    const itemDate = new Date(item['Ngày ghi nhận'].split('/').reverse().join('-'));
+                    return (
+                        (nguonTiepnhan === '' || item['Nguồn tiếp nhận'] === nguonTiepnhan) &&
+                        (sales === '' || item['Sales Phụ Trách'] === sales) &&
+                        (startDate === '' || itemDate >= new Date(startDate)) &&
+                        (endDate === '' || itemDate <= new Date(endDate))
+                    );
+                });
+
+                state.filteredDoanhthu = state.doanhthu.filter(item => {
+                    const itemDate = new Date(item['Ngày chứng từ'].split('/').reverse().join('-'));
+                    return (
+                        (startDate === '' || itemDate >= new Date(startDate)) &&
+                        (endDate === '' || itemDate <= new Date(endDate))
+                    );
+                });
+
+                updateDashboard();
+            },
+            initializeFilters: () => {
+                const nguonTiepnhanSet = new Set(state.dskh.map(item => item['Nguồn tiếp nhận']));
+                const salesSet = new Set(state.dskh.map(item => item['Sales Phụ Trách']));
+
+                [nguonTiepnhanSet, salesSet].forEach((set, index) => {
+                    const select = index === 0 ? DOM.nguonTiepnhanFilter : DOM.salesFilter;
+                    set.forEach(value => {
+                        const option = document.createElement('option');
+                        option.value = value;
+                        option.textContent = value;
+                        select.appendChild(option);
+                    });
+                });
+            }
+        };
+
+        // Chart functions
+        const charts = {
+            updateCustomerGrowthChart: () => {
+                const customerData = utils.groupDataByMonth(state.filteredData, 'Ngày ghi nhận');
+                const seriesData = charts.prepareSeriesData(customerData);
+
+                console.log("Customer data:", customerData);
+                console.log("Prepared series data:", seriesData);
+
+                Highcharts.chart('customerGrowthChart', {
+                    chart: { zoomType: 'x' },
+                    title: { text: 'Biểu đồ phát sinh và lũy kế khách hàng theo tháng' },
+                    xAxis: charts.getCommonXAxis(),
+                    yAxis: [
+                        { title: { text: 'Số lượng khách hàng mới' }, min: 0, allowDecimals: false },
+                        { title: { text: 'Tổng số khách hàng lũy kế' }, opposite: true, min: 0, allowDecimals: false }
+                    ],
+                    tooltip: charts.getCommonTooltip(),
+                    series: [
+                        { name: 'Khách hàng mới', type: 'column', data: seriesData.map(item => [item.date, item.value]), color: '#7cb5ec' },
+                        { name: 'Tổng số khách hàng lũy kế', type: 'line', data: seriesData.map(item => [item.date, item.cumulativeTotal]), yAxis: 1, color: '#434348' }
+                    ],
+                    responsive: charts.getCommonResponsiveRules()
+                });
+            },
+            updateStudentGrowthChart: () => {
+                const studentData = utils.groupDataByMonth(
+                    state.filteredData.filter(item => item['Tình trạng'] === 'Đã thành khách hàng'),
+                    'Ngày trở thành KH'
+                );
+                const seriesData = charts.prepareSeriesData(studentData);
+
+                console.log("Student data:", studentData);
+                console.log("Prepared series data:", seriesData);
+
+                Highcharts.chart('studentGrowthChart', {
+                    chart: { zoomType: 'x' },
+                    title: { text: 'Biểu đồ phát sinh và lũy kế học viên theo tháng' },
+                    xAxis: charts.getCommonXAxis(),
+                    yAxis: [
+                        { title: { text: 'Số lượng học viên mới' }, min: 0, allowDecimals: false },
+                        { title: { text: 'Tổng số học viên lũy kế' }, opposite: true, min: 0, allowDecimals: false }
+                    ],
+                    tooltip: charts.getCommonTooltip(),
+                    series: [
+                        { name: 'Học viên mới', type: 'column', data: seriesData.map(item => [item.date, item.value]), color: '#7cb5ec' },
+                        { name: 'Tổng số học viên lũy kế', type: 'line', data: seriesData.map(item => [item.date, item.cumulativeTotal]), yAxis: 1, color: '#434348' }
+                    ],
+                    responsive: charts.getCommonResponsiveRules()
+                });
+            },
+            updateRevenueChart: () => {
+                const revenueData = utils.groupDataByMonth(state.filteredDoanhthu, 'Ngày chứng từ', 'Thành tiền');
+                const seriesData = charts.prepareSeriesData(revenueData);
+
+                console.log("Revenue data:", revenueData);
+                console.log("Prepared series data:", seriesData);
+
+                Highcharts.chart('revenueChart', {
+                    chart: { zoomType: 'x' },
+                    title: { text: 'Biểu đồ doanh thu và lũy kế theo tháng' },
+                    xAxis: charts.getCommonXAxis(),
+                    yAxis: [
+                        {
+                            title: { text: 'Doanh thu hàng tháng (VND)' },
+                            labels: { formatter: function () { return utils.formatCurrency(this.value); } }
+                        },
+                        {
+                            title: { text: 'Tổng doanh thu lũy kế (VND)' },
+                            opposite: true,
+                            labels: { formatter: function () { return utils.formatCurrency(this.value); } }
+                        }
+                    ],
+                    tooltip: {
+                        shared: true,
+                        formatter: function () {
+                            let tooltip = '<b>' + Highcharts.dateFormat('%m/%Y', this.x) + '</b><br/>';
+                            this.points.forEach(function (point) {
+                                tooltip += point.series.name + ': <b>' + utils.formatCurrency(point.y) + '</b><br/>';
+                            });
+                            return tooltip;
+                        }
+                    },
+                    series: [
+                        { name: 'Doanh thu hàng tháng', type: 'column', data: seriesData.map(item => [item.date, item.value]), color: '#7cb5ec' },
+                        { name: 'Tổng doanh thu lũy kế', type: 'line', data: seriesData.map(item => [item.date, item.cumulativeTotal]), yAxis: 1, color: '#434348' }
+                    ],
+                    responsive: charts.getCommonResponsiveRules()
+                });
+            },
+            prepareSeriesData: (data) => {
+                let cumulativeTotal = 0;
+                return Object.entries(data)
+                    .map(([date, value]) => ({
+                        date: parseInt(date),
+                        value: value
+                    }))
+                    .sort((a, b) => a.date - b.date)
+                    .map(item => {
+                        cumulativeTotal += item.value;
+                        return {
+                            date: item.date,
+                            value: item.value,
+                            cumulativeTotal: cumulativeTotal
+                        };
+                    });
+            },
+            getCommonXAxis: () => ({
+                type: 'datetime',
+                labels: { format: '{value:%m/%Y}' },
+                tickPositioner: function () {
+                    const positions = this.series[0].processedXData;
+                    return positions.filter((pos, index) =>
+                        index === 0 || index === positions.length - 1 ||
+                        new Date(pos).getMonth() % 3 === 0
+                    );
+                }
+            }),
+            getCommonTooltip: () => ({
+                shared: true,
+                formatter: function () {
+                    let tooltip = '<b>' + Highcharts.dateFormat('%m/%Y', this.x) + '</b><br/>';
+                    this.points.forEach(function (point) {
+                        const value = point.series.name.includes('lũy kế') ? utils.formatCurrency(point.y) : point.y;
+                        tooltip += point.series.name + ': <b>' + value + '</b><br/>';
+                    });
+                    return tooltip;
+                }
+            }),
+            getCommonResponsiveRules: () => ({
+                rules: [{
+                    condition: { maxWidth: 500 },
+                    chartOptions: {
+                        legend: {
+                            layout: 'horizontal',
+                            align: 'center',
+                            verticalAlign: 'bottom'
+                        }
+                    }
                 }]
-            });
+            })
+        };
+
+        // Dashboard update functions
+        const dashboard = {
+            updateStats: () => {
+                document.getElementById('totalCustomers').textContent = state.filteredData.length;
+                document.getElementById('totalStudents').textContent = state.filteredData.filter(item => item['Tình trạng'] === 'Đã thành khách hàng').length;
+
+                const totalRevenue = state.filteredDoanhthu.reduce((sum, item) => sum + parseFloat(item['Thành tiền'] || 0), 0);
+                document.getElementById('totalRevenue').textContent = utils.formatCurrency(totalRevenue);
+
+                const activeClasses = new Set(state.filteredData.map(item => item['Lớp']).filter(Boolean)).size;
+                document.getElementById('activeClasses').textContent = activeClasses;
+
+                document.getElementById('customerCareCount').textContent = 'N/A';
+            },
+            updateCharts: () => {
+                charts.updateCustomerGrowthChart();
+                charts.updateStudentGrowthChart();
+                charts.updateRevenueChart();
+            }
+        };
+
+        // Main update function
+        function updateDashboard() {
+            dashboard.updateStats();
+            dashboard.updateCharts();
         }
 
-      
-
-        // Initialize charts
-        function initCharts() {
-            createCustomerGrowthChart();
-            createStudentGrowthChart();
-            createRevenueChart();
+        // Export function
+        function exportToExcel() {
+            const ws = XLSX.utils.json_to_sheet(state.filteredData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Filtered Data");
+            XLSX.writeFile(wb, "filtered_data.xlsx");
         }
 
-
-
-
+        // Initialization function
         async function init() {
             try {
-                dskh = await getdskh();
-                console.log(dskh)
-                initCharts()
+                state.dskh = await api.getData('KHCN');
+                state.doanhthu = await api.getData('Phieuthu');
+                state.filteredData = [...state.dskh];
+                state.filteredDoanhthu = [...state.doanhthu];
+                dataProcessing.initializeFilters();
+                updateDashboard();
             } catch (error) {
                 console.error("Error initializing app:", error);
                 alert("Có lỗi xảy ra khi tải dữ liệu. Vui lòng thử lại sau.");
@@ -513,19 +656,27 @@
         }
 
         // Event listeners
-        darkModeToggle.addEventListener('click', toggleDarkMode);
+        // ... [Previous code remains the same]
 
-
+        // Event listeners
+        DOM.darkModeToggle.addEventListener('click', darkMode.toggle);
+        DOM.applyFiltersButton.addEventListener('click', dataProcessing.filterData);
+        DOM.resetFiltersButton.addEventListener('click', () => {
+            DOM.nguonTiepnhanFilter.value = '';
+            DOM.salesFilter.value = '';
+            DOM.startDateFilter.value = '';
+            DOM.endDateFilter.value = '';
+            state.filteredData = [...state.dskh];
+            state.filteredDoanhthu = [...state.doanhthu];
+            updateDashboard();
+        });
+        DOM.exportExcelButton.addEventListener('click', exportToExcel);
 
         // Initialize app when DOM is loaded
-        document.addEventListener('DOMContentLoaded', init);
-        
-        // Set initial dark mode based on user preference
-        if (localStorage.getItem('darkMode') === 'true') {
-            htmlElement.classList.add('dark');
-        }
-        updateDarkModeIcon();
-
+        document.addEventListener('DOMContentLoaded', () => {
+            darkMode.init();
+            init();
+        });
     </script>
 </body>
 
