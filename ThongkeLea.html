@@ -123,6 +123,21 @@
                         </select>
                     </div>
                     <div>
+                        <label for="timeRangeFilter"
+                            class="block text-sm font-medium text-gray-700 dark:text-gray-300">Khoảng thời gian</label>
+                        <select id="timeRangeFilter"
+                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                            <option value="">Tùy chỉnh</option>
+                            <option value="last7days">7 ngày qua</option>
+                            <option value="last30days">30 ngày qua</option>
+                            <option value="thisMonth">Tháng này</option>
+                            <option value="lastMonth">Tháng trước</option>
+                            <option value="thisYear">Năm nay</option>
+                            <option value="lastYear">Năm trước</option>
+                        </select>
+                    </div>
+
+                    <div>
                         <label for="startDate" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Từ
                             ngày</label>
                         <input type="date" id="startDate"
@@ -313,6 +328,7 @@
             htmlElement: document.documentElement,
             nguonTiepnhanFilter: document.getElementById('nguonTiepnhanFilter'),
             salesFilter: document.getElementById('salesFilter'),
+            timeRangeFilter: document.getElementById('timeRangeFilter'),
             startDateFilter: document.getElementById('startDate'),
             endDateFilter: document.getElementById('endDate'),
             applyFiltersButton: document.getElementById('applyFilters'),
@@ -327,6 +343,40 @@
             filteredData: [],
             filteredDoanhthu: []
         };
+        function updateDateRange() {
+            const today = new Date();
+            const startDate = new Date();
+            let endDate = new Date();
+
+            switch (DOM.timeRangeFilter.value) {
+                case 'last7days':
+                    startDate.setDate(today.getDate() - 7);
+                    break;
+                case 'last30days':
+                    startDate.setDate(today.getDate() - 30);
+                    break;
+                case 'thisMonth':
+                    startDate.setDate(1);
+                    break;
+                case 'lastMonth':
+                    startDate.setMonth(today.getMonth() - 1);
+                    startDate.setDate(1);
+                    endDate = new Date(today.getFullYear(), today.getMonth(), 0);
+                    break;
+                case 'thisYear':
+                    startDate.setMonth(0, 1);
+                    break;
+                case 'lastYear':
+                    startDate.setFullYear(today.getFullYear() - 1, 0, 1);
+                    endDate.setFullYear(today.getFullYear() - 1, 11, 31);
+                    break;
+                default:
+                    return; // Không thay đổi nếu chọn "Tùy chỉnh"
+            }
+
+            DOM.startDateFilter.value = utils.formatDate(startDate);
+            DOM.endDateFilter.value = utils.formatDate(endDate);
+        }
 
         // Utility functions
         const utils = {
@@ -585,7 +635,7 @@
                 formatter: function () {
                     let tooltip = '<b>' + Highcharts.dateFormat('%m/%Y', this.x) + '</b><br/>';
                     this.points.forEach(function (point) {
-                        const value = point.series.name.includes('lũy kế') ? utils.formatCurrency(point.y) : point.y;
+                        const value = point.y;
                         tooltip += point.series.name + ': <b>' + value + '</b><br/>';
                     });
                     return tooltip;
@@ -614,7 +664,7 @@
                 const totalRevenue = state.filteredDoanhthu.reduce((sum, item) => sum + parseFloat(item['Thành tiền'] || 0), 0);
                 document.getElementById('totalRevenue').textContent = utils.formatCurrency(totalRevenue);
 
-                const activeClasses = new Set(state.filteredData.map(item => item['Lớp']).filter(Boolean)).size;
+                const activeClasses = new Set(state.filteredData.map(item => item['IDLOP']).filter(Boolean)).size - 2;
                 document.getElementById('activeClasses').textContent = activeClasses;
 
                 document.getElementById('customerCareCount').textContent = 'N/A';
@@ -659,11 +709,16 @@
         // ... [Previous code remains the same]
 
         // Event listeners
+        DOM.timeRangeFilter.addEventListener('change', () => {
+            updateDateRange();
+            dataProcessing.filterData();
+        });
         DOM.darkModeToggle.addEventListener('click', darkMode.toggle);
         DOM.applyFiltersButton.addEventListener('click', dataProcessing.filterData);
         DOM.resetFiltersButton.addEventListener('click', () => {
             DOM.nguonTiepnhanFilter.value = '';
             DOM.salesFilter.value = '';
+            DOM.timeRangeFilter.value = '';
             DOM.startDateFilter.value = '';
             DOM.endDateFilter.value = '';
             state.filteredData = [...state.dskh];
