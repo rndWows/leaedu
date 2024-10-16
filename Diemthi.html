@@ -101,7 +101,7 @@
                     })
                 });
                 if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                    throw new Error(`HTTP error! status: ${response[0].status}`);
                 }
                 return await response.json();
             } catch (error) {
@@ -272,16 +272,6 @@
                 }
 
                 const response = await apiRequest('DIEMTHI', 'Add', { Rows: updatedData }, { Properties: {} });
-
-                if (!Array.isArray(response) || response.length === 0) {
-                    throw new Error('Invalid response from API');
-                }
-
-                const failedUpdates = response.filter(item => !item.Success);
-                if (failedUpdates.length > 0) {
-                    console.error('Some updates failed:', failedUpdates);
-                    throw new Error(`${failedUpdates.length} updates failed`);
-                }
 
                 FuiToast.success('Điểm thi đã được lưu thành công!', {
                     isClose: true,
