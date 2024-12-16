@@ -5,16 +5,39 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LEA Dashboard</title>
-    <title>Thống kê KH</title>
     <link rel="shortcut icon"
-        href="https://lea.edu.vn/wp-content/uploads/2023/07/removal.ai_9476a724-4e89-400f-a9e4-e6f4d9c4503d-logo-vector-1.png"
-        type="image/x-icon">
+        href="https://lea.edu.vn/wp-content/uploads/2023/07/removal.ai_9476a724-4e89-400f-a9e4-e6f4d9c4503d-logo-vector-1.png">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <script src="https://code.highcharts.com/highcharts.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.16.9/xlsx.full.min.js"></script>
-
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    // Các cấu hình theme khác
+                }
+            }
+        }
+    </script>
     <style>
+        /* Thêm vào phần style */
+        .dark {
+            color-scheme: dark;
+        }
+
+        /* Transition cho dark mode */
+        html.transition,
+        html.transition *,
+        html.transition *:before,
+        html.transition *:after {
+            transition: all 750ms !important;
+            transition-delay: 0 !important;
+        }
+
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
         * {
@@ -101,7 +124,9 @@
                         <h1 class="text-2xl font-bold text-gray-900 dark:text-white">LEA EDU VN</h1>
                     </div>
                 </div>
-
+                <button id="darkModeToggle" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <i id="darkModeIcon" class="fas fa-moon text-gray-600 dark:text-gray-300"></i>
+                </button>
             </div>
         </div>
     </header>
@@ -249,96 +274,108 @@
         </div>
     </div>@
     <script>
-
-
         const appId = '237238ed-4230-4db1-ab50-e492cea9cdba';
         const accessKey = 'V2-GAZkd-YsAqg-LBYbc-LRoOQ-2ZFzj-Imfj1-SodbW-9RtwD';
-        const region = 'www';
-        let danhsachlop = [];
-        let diemdanh = [];
-        let hocvien = [];
-        function formatDate(dateString) {
-            if (!dateString) return '';
-            const date = new Date(dateString);
-            const day = String(date.getDate()).padStart(2, '0');
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const year = date.getFullYear();
-            return `${day}/${month}/${year}`;
-        }
-        async function apiRequest(tableName, action, data, Properties) {
+        const CACHE_DURATION = 15 * 60 * 1000;
 
-            const apiUrl = `https://${region}.appsheet.com/api/v2/apps/${appId}/tables/${tableName}/Action`;
+
+
+
+        const api = axios.create({
+            baseURL: `https://www.appsheet.com/api/v2/apps/${appId}/tables`,
+            headers: {
+                'ApplicationAccessKey': accessKey,
+                'Content-Type': 'application/json'
+            }
+        });
+        const dataCache = new Map();
+        let danhsachlop = [], diemdanh = [], hocvien = [];
+
+        const formatDate = date => {
+            if (!date) return '';
+            const d = new Date(date);
+            return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+        };
+
+
+        // API Functions
+        async function fetchData(tableName, selector, forceRefresh = false) {
+            const cacheKey = `${tableName}-${selector}`;
+
+            if (!forceRefresh) {
+                const cached = dataCache.get(cacheKey);
+                if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+                    return cached.data;
+                }
+            }
+
             try {
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: {
-                        'ApplicationAccessKey': accessKey,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        Action: action,
-                        ...Properties,
-                        ...data
-                    })
+                const response = await api.post(`/${tableName}/Action`, {
+                    Action: 'Find',
+                    Properties: { Selector: selector }
                 });
 
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
+                dataCache.set(cacheKey, {
+                    data: response.data,
+                    timestamp: Date.now()
+                });
 
-                return await response.json();
+                return response.data;
             } catch (error) {
-                console.error("API Error:", error);
+                console.error(`Error fetching ${tableName}:`, error);
                 throw error;
             }
         }
+        // Thêm vào phần script
+        function setupDarkMode() {
+            const html = document.documentElement;
+            const darkModeToggle = document.getElementById('darkModeToggle');
 
-        // gồm các cột 
-        async function fetchLopData() {
-            try {
-                const response = await apiRequest('LOP', 'Find', {}, {
-                    Properties: { Selector: `Filter(LOP, [Trạng thái lớp]<>"Lớp chờ")` }
-                });
-                if (!Array.isArray(response) || response.length === 0) {
-                    throw new Error("Invalid data received from API");
-                }
-                return response;
-            } catch (error) {
-                console.error("Error fetching data from AppSheet:", error);
-                throw error;
+            // Đọc trạng thái từ localStorage
+            if (localStorage.getItem('darkMode') === 'true' ||
+                (!localStorage.getItem('darkMode') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                html.classList.add('dark');
+                updateDarkModeIcon(true);
             }
+
+            // Thêm transition class
+            html.classList.add('transition');
+
+            darkModeToggle.addEventListener('click', () => {
+                html.classList.toggle('dark');
+                const isDark = html.classList.contains('dark');
+                localStorage.setItem('darkMode', isDark);
+                updateDarkModeIcon(isDark);
+            });
         }
 
-        async function fetchDiemdanhData() {
+        function updateDarkModeIcon(isDark) {
+            const icon = document.getElementById('darkModeIcon');
+            icon.classList.remove('fa-sun', 'fa-moon');
+            icon.classList.add(isDark ? 'fa-sun' : 'fa-moon');
+        }
+        async function loadData(forceRefresh = false) {
             try {
-                const response = await apiRequest('DIEMDANHHV', 'Find', {}, {
-                    Properties: { Selector: `Filter(DIEMDANHHV, true)` }
-                });
-                if (!Array.isArray(response) || response.length === 0) {
-                    throw new Error("Invalid data received from API");
-                }
-                return response;
-            } catch (error) {
-                console.error("Error fetching data from AppSheet:", error);
-                throw error;
+                showLoading(true);
+                const [lopData, diemdanhData, hocvienData] = await Promise.all([
+                    fetchData('LOP', `Filter(LOP, [Trạng thái lớp]<>"Lớp chờ")`, forceRefresh),
+                    fetchData('DIEMDANHHV', 'Filter(DIEMDANHHV, true)', forceRefresh),
+                    fetchData('Danh sách học viên', 'Filter(Danh sách học viên,true)', forceRefresh)
+                ]);
+
+                danhsachlop = lopData;
+                diemdanh = diemdanhData;
+                hocvien = hocvienData;
+
+                return { lop: lopData, diemdanh: diemdanhData, hocvien: hocvienData };
+            } finally {
+                showLoading(false);
             }
         }
-
-        async function fetchHocVien() {
-            try {
-                const response = await apiRequest('Danh sách học viên', 'Find', {}, {
-                    Properties: { Selector: `Filter(Danh sách học viên,true)` }
-                });
-                if (!Array.isArray(response) || response.length === 0) {
-                    throw new Error("Invalid data received from API");
-                }
-                return response;
-            } catch (error) {
-                console.error("Error fetching data from AppSheet:", error);
-                throw error;
-            }
+        // UI Functions 
+        function showLoading(show = true) {
+            document.getElementById('loading').classList.toggle('hidden', !show);
         }
-
         function processClassData() {
             const processedData = danhsachlop.map(classItem => {
                 // Get all students for this class based on IDLOP
@@ -375,63 +412,63 @@
 
             // Create table HTML
             const tableHTML = `
-        <div class="bg-white dark:bg-gray-800 shadow-lg rounded-lg overflow-hidden">
-            <div class="p-4">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Danh sách lớp học</h2>
-                    <div class="flex space-x-2">
-                        <input type="text" 
-                               id="searchInput"
-                               placeholder="Tìm kiếm..." 
-                               class="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500">
-                    </div>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                       <thead class="bg-gray-50 dark:bg-gray-700">
-    <tr>
-        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Tên lớp</th>
-        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Chi nhánh</th>
-        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">GVCN</th>
-        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Tổng HV</th>
-        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">HV học thử</th>
-        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Trạng thái</th>
-        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Chi tiết</th>
-    </tr>
-</thead>
-                        <tbody class="bg-white divide-y divide-gray-200 dark:divide-gray-700">
-                           ${processedData.map(item => `
-    <tr class="hover:bg-gray-50 dark:hover:bg-gray-600">
-        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">${item["Tên lớp"]}</td>
-        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">${item["Chi nhánh"]}</td>
-        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">${item["Giáo viên chủ nhiệm"]}</td>
-        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">${item.totalStudents}</td>
-        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-            <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-orange-100 text-orange-800">
-                ${item.tempStudents}
-            </span>
-        </td>
-        <td class="px-6 py-4 whitespace-nowrap text-sm">
-            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                ${item["Trạng thái lớp"] === "Đang học" ? "bg-green-100 text-green-800" :
-                    item["Trạng thái lớp"] === "Dự kiến KG" ? "bg-yellow-100 text-yellow-800" :
-                        "bg-gray-100 text-gray-800"}">
-                ${item["Trạng thái lớp"]}
-            </span>
-        </td>
-        <td class="px-6 py-4 whitespace-nowrap text-sm">
-            <button onclick="showAttendanceModal('${item.IDLOP}')" 
-                    class="bg-indigo-100 text-indigo-700 hover:bg-indigo-200 px-3 py-1 rounded-md text-sm font-medium">
-                <i class="fas fa-info-circle mr-1"></i> Chi tiết
-            </button>
-        </td>
-    </tr>
-`).join('')}
-                        </tbody>
-                    </table>
-                </div>
+    <div class="bg-white dark:bg-gray-800 shadow-lg rounded-lg overflow-hidden">
+    <div class="p-4">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Danh sách lớp học</h2>
+            <div class="flex space-x-2">
+                <input type="text" 
+                       id="searchInput"
+                       placeholder="Tìm kiếm..." 
+                       class="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white">
             </div>
         </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead class="bg-gray-50 dark:bg-gray-700">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Tên lớp</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Chi nhánh</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">GVCN</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Tổng HV</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">HV học thử</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Trạng thái</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Chi tiết</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
+                    ${processedData.map(item => `
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">${item["Tên lớp"]}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">${item["Chi nhánh"]}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">${item["Giáo viên chủ nhiệm"]}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">${item.totalStudents}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                            <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">
+                                ${item.tempStudents}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                ${item["Trạng thái lớp"] === "Đang học" ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200" :
+                    item["Trạng thái lớp"] === "Dự kiến KG" ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200" :
+                        "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300"}">
+                                ${item["Trạng thái lớp"]}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                            <button onclick="showAttendanceModal('${item.IDLOP}')" 
+                                    class="bg-indigo-100 text-indigo-700 hover:bg-indigo-200 dark:bg-indigo-900 dark:text-indigo-200 dark:hover:bg-indigo-800 px-3 py-1 rounded-md text-sm font-medium">
+                                <i class="fas fa-info-circle mr-1"></i> Chi tiết
+                            </button>
+                        </td>
+                    </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
     `;
 
             // Insert table into main content
@@ -542,46 +579,45 @@
                 quit: classAttendance.filter(r => r["TRẠNG THÁI"] === "S - Nghỉ Luôn").length
             };
 
-            // Update modal title with class info
+            // Cập nhật modal title với màu tối
             document.getElementById('modalTitle').innerHTML = `
-        <div class="text-xl font-semibold mb-2">${classInfo["Tên lớp"]}</div>
-        <div class="text-sm text-gray-600">
+        <div class="text-xl font-semibold mb-2 dark:text-white">${classInfo["Tên lớp"]}</div>
+        <div class="text-sm text-gray-600 dark:text-gray-300">
             <span class="mr-4">GVCN: ${classInfo["Giáo viên chủ nhiệm"]}</span>
             <span class="mr-4">Số buổi: ${classInfo["Số buổi học"] || 'N/A'}</span>
             <span>Thời gian: ${classInfo["Giờ học"] || 'N/A'}</span>
         </div>
     `;
 
-            // Render statistics cards with larger size
-            const statsHTML = `
+               // Cập nhật thẻ thống kê với màu tối
+    const statsHTML = `
         <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
-            
-            <div class="bg-green-100 p-6 rounded-lg">
-                <div class="font-medium text-green-800 text-lg">Có mặt</div>
-                <div class="text-3xl font-bold text-green-900">${stats.present}</div>
+            <div class="bg-green-100 dark:bg-green-900 p-6 rounded-lg">
+                <div class="font-medium text-green-800 dark:text-green-200 text-lg">Có mặt</div>
+                <div class="text-3xl font-bold text-green-900 dark:text-green-100">${stats.present}</div>
             </div>
-            <div class="bg-red-100 p-6 rounded-lg">
-                <div class="font-medium text-red-800 text-lg">Vắng mặt</div>
-                <div class="text-3xl font-bold text-red-900">${stats.absent}</div>
+            <div class="bg-red-100 dark:bg-red-900 p-6 rounded-lg">
+                <div class="font-medium text-red-800 dark:text-red-200 text-lg">Vắng mặt</div>
+                <div class="text-3xl font-bold text-red-900 dark:text-red-100">${stats.absent}</div>
             </div>
-            <div class="bg-yellow-100 p-6 rounded-lg">
-                <div class="font-medium text-yellow-800 text-lg">Đi trễ</div>
-                <div class="text-3xl font-bold text-yellow-900">${stats.late}</div>
+            <div class="bg-yellow-100 dark:bg-yellow-900 p-6 rounded-lg">
+                <div class="font-medium text-yellow-800 dark:text-yellow-200 text-lg">Đi trễ</div>
+                <div class="text-3xl font-bold text-yellow-900 dark:text-yellow-100">${stats.late}</div>
             </div>
-            <div class="bg-purple-100 p-6 rounded-lg">
-                <div class="font-medium text-purple-800 text-lg">Có phép</div>
-                <div class="text-3xl font-bold text-purple-900">${stats.excused}</div>
+            <div class="bg-purple-100 dark:bg-purple-900 p-6 rounded-lg">
+                <div class="font-medium text-purple-800 dark:text-purple-200 text-lg">Có phép</div>
+                <div class="text-3xl font-bold text-purple-900 dark:text-purple-100">${stats.excused}</div>
             </div>
-            <div class="bg-gray-100 p-6 rounded-lg">
-                <div class="font-medium text-gray-800 text-lg">Nghỉ luôn</div>
-                <div class="text-3xl font-bold text-gray-900">${stats.quit}</div>
+            <div class="bg-gray-100 dark:bg-gray-700 p-6 rounded-lg">
+                <div class="font-medium text-gray-800 dark:text-gray-200 text-lg">Nghỉ luôn</div>
+                <div class="text-3xl font-bold text-gray-900 dark:text-gray-100">${stats.quit}</div>
             </div>
         </div>
     `;
             document.getElementById('attendanceStats').innerHTML = statsHTML;
 
-            // Render pivot table
-            const pivotTableHTML = `
+           // Cập nhật bảng pivot với màu tối
+    const pivotTableHTML = `
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                 <thead class="bg-gray-50 dark:bg-gray-700">
@@ -592,17 +628,17 @@
                                 Buổi ${index + 1}<br>${formatDate(date)}
                             </th>
                         `).join('')}
-                        <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase bg-gray-100">Có mặt</th>
-                        <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase bg-gray-100">Vắng</th>
-                        <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase bg-gray-100">Trễ</th>
-                        <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase bg-gray-100">Có phép</th>
-                        <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase bg-gray-100">Nghỉ luôn</th>
+                        <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase bg-gray-100 dark:bg-gray-600">Có mặt</th>
+                        <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase bg-gray-100 dark:bg-gray-600">Vắng</th>
+                        <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase bg-gray-100 dark:bg-gray-600">Trễ</th>
+                        <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase bg-gray-100 dark:bg-gray-600">Có phép</th>
+                        <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase bg-gray-100 dark:bg-gray-600">Nghỉ luôn</th>
                     </tr>
                 </thead>
-                <tbody class="bg-white divide-y divide-gray-200 dark:divide-gray-700">
+                <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                     ${pivotData.map(row => `
-                        <tr class="hover:bg-gray-50">
-                            <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 sticky left-0 bg-white">
+                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                            <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white sticky left-0 bg-white dark:bg-gray-800">
                                 ${row.student["Tên KH"]}
                             </td>
                             ${allDates.map(date => `
@@ -614,11 +650,11 @@
                                     ` : ''}
                                 </td>
                             `).join('')}
-                            <td class="px-4 py-3 text-center text-sm font-medium text-green-600 bg-gray-50">${row.stats.present}</td>
-                            <td class="px-4 py-3 text-center text-sm font-medium text-red-600 bg-gray-50">${row.stats.absent}</td>
-                            <td class="px-4 py-3 text-center text-sm font-medium text-yellow-600 bg-gray-50">${row.stats.late}</td>
-                            <td class="px-4 py-3 text-center text-sm font-medium text-purple-600 bg-gray-50">${row.stats.excused}</td>
-                            <td class="px-4 py-3 text-center text-sm font-medium text-gray-600 bg-gray-50">${row.stats.quit}</td>
+                            <td class="px-4 py-3 text-center text-sm font-medium text-green-600 dark:text-green-400 bg-gray-50 dark:bg-gray-700">${row.stats.present}</td>
+                            <td class="px-4 py-3 text-center text-sm font-medium text-red-600 dark:text-red-400 bg-gray-50 dark:bg-gray-700">${row.stats.absent}</td>
+                            <td class="px-4 py-3 text-center text-sm font-medium text-yellow-600 dark:text-yellow-400 bg-gray-50 dark:bg-gray-700">${row.stats.late}</td>
+                            <td class="px-4 py-3 text-center text-sm font-medium text-purple-600 dark:text-purple-400 bg-gray-50 dark:bg-gray-700">${row.stats.excused}</td>
+                            <td class="px-4 py-3 text-center text-sm font-medium text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-700">${row.stats.quit}</td>
                         </tr>
                     `).join('')}
                 </tbody>
@@ -791,16 +827,47 @@
         // Modify the init() function to include table rendering
         async function init() {
             try {
-                danhsachlop = await fetchLopData();
-                diemdanh = await fetchDiemdanhData();
-                hocvien = await fetchHocVien();
-
-                console.log(danhsachlop);
-                console.log(diemdanh);
-                console.log(hocvien);
+                setupDarkMode(); // Add this line
+                await loadData();
+                populateFilterDropdowns();
+                renderDashboardTable();
+                setupEventListeners();
             } catch (error) {
-                console.error('Error initializing dashboard:', error);
+                handleError(error);
             }
+        }
+        function handleError(error) {
+            console.error('Error:', error);
+            alert('Có lỗi xảy ra, vui lòng thử lại sau');
+        }
+        function setupEventListeners() {
+            document.getElementById('applyFilters').addEventListener('click',
+                _.debounce(applyFilters, 300));
+            document.getElementById('resetFilters').addEventListener('click', resetFilters);
+            document.getElementById('exportExcel').addEventListener('click', exportToExcel);
+            document.getElementById('toggleFilters').addEventListener('click', toggleSidebar);
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                searchInput.addEventListener('input',
+                    _.debounce(e => filterTable(e.target.value), 300));
+            }
+        }
+        function filterTable(value) {
+            const rows = document.querySelectorAll('tbody tr');
+            const searchTerm = value.toLowerCase();
+
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(searchTerm) ? '' : 'none';
+            });
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('filtersSidebar');
+            const overlay = document.getElementById('overlay');
+
+            sidebar.classList.toggle('-translate-x-full');
+            overlay.classList.toggle('hidden');
         }
         // Hàm để lọc và xử lý dữ liệu
         function getFilteredData() {
@@ -821,24 +888,16 @@
         }
 
         // Hàm để cập nhật thống kê
-        function updateStatistics(filteredData) {
-            const processedData = filteredData.map(classItem => {
-                const classStudents = hocvien.filter(student => student.IDLOP === classItem.IDLOP);
-                const tempStudents = classStudents.filter(student => student["Trạng thái lớp"] === "Học tạm").length;
+        function updateStatistics(data) {
+            const stats = {
+                totalClasses: data.length,
+                totalStudents: data.reduce((acc, curr) => acc + curr.totalStudents, 0),
+                tempStudents: data.reduce((acc, curr) => acc + curr.tempStudents, 0)
+            };
 
-                return {
-                    ...classItem,
-                    totalStudents: classStudents.length,
-                    tempStudents
-                };
-            });
-
-            // Cập nhật các thẻ thống kê
-            document.getElementById('totalProducts').textContent = processedData.length;
-            document.getElementById('totalRevenue').textContent = processedData.reduce((acc, curr) => acc + curr.totalStudents, 0);
-            document.getElementById('totalWorkDays').textContent = processedData.reduce((acc, curr) => acc + curr.tempStudents, 0);
-
-            return processedData;
+            document.getElementById('totalProducts').textContent = stats.totalClasses;
+            document.getElementById('totalRevenue').textContent = stats.totalStudents;
+            document.getElementById('totalWorkDays').textContent = stats.tempStudents;
         }
         // Hàm để cập nhật bảng hiện tại
         function updateTable(processedData) {
@@ -873,19 +932,18 @@
         </tr>
     `).join('');
         }
-        // Hàm áp dụng bộ lọc
-        // Hàm áp dụng bộ lọc chính
+        // Sửa hàm applyFilters
         function applyFilters() {
             // Lấy dữ liệu đã lọc
             const filteredData = getFilteredData();
 
-            // Xử lý và cập nhật thống kê
-            const processedData = updateStatistics(filteredData);
+            // Cập nhật thống kê
+            updateStatistics(filteredData);
 
-            // Cập nhật bảng
-            updateTable(processedData);
+            // Cập nhật bảng với chính filteredData
+            updateTable(filteredData);
 
-            // Đóng sidebar trên mobile
+            // Đóng sidebar mobile
             if (window.innerWidth < 1024) {
                 document.getElementById('filtersSidebar').classList.add('-translate-x-full');
                 document.getElementById('overlay').classList.add('hidden');
@@ -985,31 +1043,13 @@
 
         // Cập nhật event listener
         // Update DOMContentLoaded event listener
-        document.addEventListener('DOMContentLoaded', async function () {
-            try {
-                document.getElementById('loading').classList.remove('hidden');
 
-                await init();
-                populateFilterDropdowns();
-                renderDashboardTable(); // Call render only once here
-
-                // Add event listeners for buttons
-                document.getElementById('applyFilters').addEventListener('click', applyFilters);
-                document.getElementById('resetFilters').addEventListener('click', resetFilters);
-                document.getElementById('exportExcel').addEventListener('click', exportToExcel);
-
-            } catch (error) {
-                console.error('Error initializing dashboard:', error);
-            } finally {
-                document.getElementById('loading').classList.add('hidden');
-            }
-        });
-        // Thêm vào cuối file script
-        window.addEventListener('click', function (event) {
+        // Start Application
+        document.addEventListener('DOMContentLoaded', init);
+        // Handle clicks outside modal
+        window.addEventListener('click', e => {
             const modal = document.getElementById('attendanceModal');
-            if (event.target === modal) {
-                closeModal();
-            }
+            if (e.target === modal) closeModal();
         });
     </script>
 
