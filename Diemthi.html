@@ -1,15 +1,20 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LEA EDU - Lịch Thi</title>
-    <link rel="shortcut icon" href="https://lea.edu.vn/wp-content/uploads/2023/07/removal.ai_9476a724-4e89-400f-a9e4-e6f4d9c4503d-logo-vector-1.png" type="image/x-icon">
+    <link rel="shortcut icon"
+        href="https://lea.edu.vn/wp-content/uploads/2023/07/removal.ai_9476a724-4e89-400f-a9e4-e6f4d9c4503d-logo-vector-1.png"
+        type="image/x-icon">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.10.7/dayjs.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/lelinh014756/fui-toast-js@master/assets/css/toast@1.0.1/fuiToast.min.css">
-    <script src="https://cdn.jsdelivr.net/gh/lelinh014756/fui-toast-js@master/assets/js/toast@1.0.1/fuiToast.min.js"></script>
+    <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/gh/lelinh014756/fui-toast-js@master/assets/css/toast@1.0.1/fuiToast.min.css">
+    <script
+        src="https://cdn.jsdelivr.net/gh/lelinh014756/fui-toast-js@master/assets/js/toast@1.0.1/fuiToast.min.js"></script>
     <style>
         .sticky-header {
             position: sticky;
@@ -17,11 +22,13 @@
             z-index: 1000;
             background-color: white;
         }
+
         .content-wrapper {
             padding-top: 1rem;
         }
     </style>
 </head>
+
 <body class="bg-gray-100 font-sans">
     <div id="fui-toast"></div>
     <div class="flex flex-col min-h-screen bg-gray-100">
@@ -29,12 +36,15 @@
             <div class="container mx-auto max-w-8xl">
                 <header class="sticky-header bg-white shadow rounded-lg p-4 md:p-6 mb-6">
                     <div class="flex flex-col md:flex-row justify-between items-center">
-                        <img src="https://lea.edu.vn/wp-content/uploads/2023/07/removal.ai_9476a724-4e89-400f-a9e4-e6f4d9c4503d-logo-vector-1.png" width="100" alt="LEA EDU Logo">
+                        <img src="https://lea.edu.vn/wp-content/uploads/2023/07/removal.ai_9476a724-4e89-400f-a9e4-e6f4d9c4503d-logo-vector-1.png"
+                            width="100" alt="LEA EDU Logo">
                         <div class="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-4 mt-4 md:mt-0">
-                            <button id="refreshButton" class="w-full md:w-auto py-2 px-4 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-300">
+                            <button id="refreshButton"
+                                class="w-full md:w-auto py-2 px-4 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-300">
                                 <i class="fas fa-sync-alt mr-2"></i>Làm mới dữ liệu
                             </button>
-                            <button id="syncButton" class="w-full md:w-auto py-2 px-4 bg-green-500 text-white rounded hover:bg-green-600 transition duration-300">
+                            <button id="syncButton"
+                                class="w-full md:w-auto py-2 px-4 bg-green-500 text-white rounded hover:bg-green-600 transition duration-300">
                                 <i class="fas fa-cloud-upload-alt mr-2"></i>Lưu điểm thi
                             </button>
                         </div>
@@ -44,7 +54,6 @@
                 <div class="mb-6 bg-white shadow rounded-lg p-4 md:p-6">
                     <h2 class="text-xl md:text-2xl font-semibold mb-4">Thông tin lịch thi</h2>
                     <div id="examInfo" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <!-- Exam information will be populated here -->
                     </div>
                 </div>
 
@@ -65,7 +74,6 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <!-- Rows will be populated dynamically -->
                             </tbody>
                         </table>
                     </div>
@@ -75,16 +83,12 @@
     </div>
 
     <script>
-        // Constants for AppSheet API
         const appId = '237238ed-4230-4db1-ab50-e492cea9cdba';
         const accessKey = 'V2-GAZkd-YsAqg-LBYbc-LRoOQ-2ZFzj-Imfj1-SodbW-9RtwD';
-
         let idlop = '';
         let idlichthi = '';
         let studentsData = [];
         let thongtinlichthi = [];
-
-        // API functions
         async function apiRequest(tableName, action, data, Properties) {
             const apiUrl = `https://www.appsheet.com/api/v2/apps/${appId}/tables/${tableName}/Action`;
             try {
@@ -109,7 +113,6 @@
                 throw error;
             }
         }
-
         const fetchStudents = async () => {
             try {
                 const response = await apiRequest('Danh sách học viên', 'Find', {}, {
@@ -118,11 +121,9 @@
                 studentsData = Array.isArray(response) ? response : [];
                 renderStudentList();
             } catch (error) {
-                console.error('Error fetching students:', error);
                 studentsData = [];
             }
         };
-
         const thongtinlop = async () => {
             try {
                 const response = await apiRequest('LICHTHI', 'Find', {}, {
@@ -131,11 +132,9 @@
                 thongtinlichthi = Array.isArray(response) ? response : [];
                 renderExamInfo();
             } catch (error) {
-                console.error('Error fetching exam info:', error);
                 thongtinlichthi = [];
             }
         };
-
         const renderExamInfo = () => {
             const examInfoDiv = document.getElementById('examInfo');
             if (thongtinlichthi.length > 0) {
@@ -165,11 +164,9 @@
                 examInfoDiv.innerHTML = '<p>Không có thông tin lịch thi.</p>';
             }
         };
-
         const renderStudentList = () => {
             const studentListBody = document.querySelector('#studentListTable tbody');
             studentListBody.innerHTML = '';
-
             studentsData.forEach(student => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
@@ -180,15 +177,13 @@
                     <td class="border px-4 py-2"><input type="number" class="w-full" data-field="RW-A" value="${student['RW-A'] || ''}" min="0" max="${thongtinlichthi[0]?.['SL câu RW']}"></td>
                     <td class="border px-4 py-2"><span class="total-score"></span></td>
                     <td class="border px-4 py-2"><span class="grade"></span></td>
-                    <td class="border px-4 py-2"><input type="text" class="w-full" data-field="Nhận xét giáo viên" value="${student['Nhận xét giáo viên'] || ''}"></td>
+                    <td class="border px-4 py-2"><textarea class="w-full px-2 py-1 resize-y" data-field="Nhận xét giáo viên" rows="2">${student['Nhận xét giáo viên'] || ''}</textarea></td>
                 `;
                 studentListBody.appendChild(row);
             });
-
             document.querySelectorAll('#studentListTable input').forEach(input => {
                 input.addEventListener('input', () => updateStudentScore(input));
             });
-
             document.querySelectorAll('#studentListTable tr').forEach(row => {
                 updateStudentScore(row.querySelector('input[data-field="QUÁ TRÌNH (10%)"]'));
             });
@@ -196,23 +191,18 @@
 
         const updateStudentScore = (input) => {
             if (!input || !input.closest('tr')) return;
-
             const row = input.closest('tr');
             const quaTrinh = parseFloat(row.querySelector('[data-field="QUÁ TRÌNH (10%)"]')?.value) || 0;
             const sA = parseFloat(row.querySelector('[data-field="S-A"]')?.value) || 0;
             const lA = parseFloat(row.querySelector('[data-field="L-A"]')?.value) || 0;
             const rwA = parseFloat(row.querySelector('[data-field="RW-A"]')?.value) || 0;
-
             const examInfo = thongtinlichthi[0];
             const slCauL = examInfo['SL câu L'];
             const slCauRW = examInfo['SL câu RW'];
-
             const totalScore = quaTrinh + ((sA / 40) * 100 * 0.25) + ((lA / slCauL) * 100 * 0.25) + ((rwA / slCauRW) * 100 * 0.4);
             row.querySelector('.total-score').textContent = totalScore.toFixed(2);
-
             const grade = calculateGrade(totalScore);
             row.querySelector('.grade').textContent = grade;
-
             const studentName = row.cells[0].textContent;
             const studentIndex = studentsData.findIndex(student => student['Tên KH'] === studentName);
             if (studentIndex !== -1) {
@@ -221,7 +211,6 @@
                 studentsData[studentIndex]['Xếp loại'] = grade;
             }
         };
-
         const calculateGrade = (score) => {
             if (score >= 97.5) return 'A+';
             if (score >= 94.5) return 'A';
@@ -235,7 +224,6 @@
             const urlParams = new URLSearchParams(window.location.search);
             idlop = urlParams.get('idlop');
             idlichthi = urlParams.get('idlichthi');
-
             return FuiToast.promise(
                 Promise.all([fetchStudents(), thongtinlop()]),
                 {
@@ -246,7 +234,6 @@
                 { isClose: true }
             );
         };
-
         const saveExamScores = async () => {
             try {
                 const updatedData = studentsData.map(student => {
@@ -266,28 +253,19 @@
                         'Nhận xét giáo viên': student['Nhận xét giáo viên'] || ''
                     };
                 });
-
-                if (updatedData.length === 0) {
-                    throw new Error('No student data to update');
-                }
-
                 const response = await apiRequest('DIEMTHI', 'Add', { Rows: updatedData }, { Properties: {} });
-
                 FuiToast.success('Điểm thi đã được lưu thành công!', {
                     isClose: true,
                     autoClose: 3000
                 });
             } catch (error) {
-                console.error('Error saving exam scores:', error);
                 FuiToast.error(`Có lỗi xảy ra khi lưu điểm thi: ${error.message}. Vui lòng thử lại.`, {
                     isClose: true,
                     autoClose: 5000
                 });
             }
         };
-
         document.addEventListener('DOMContentLoaded', initializeApp);
-
         document.getElementById('refreshButton').addEventListener('click', initializeApp);
         document.getElementById('syncButton').addEventListener('click', () => {
             FuiToast.promise(
@@ -302,4 +280,5 @@
         });
     </script>
 </body>
+
 </html>
