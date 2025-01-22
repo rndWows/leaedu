@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <title>LEA English Center Report</title>
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <!-- Bootstrap -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+    <!-- Summernote -->
+    <link href="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote.min.js"></script>
+    <link rel="stylesheet" type="text/css"
+        href="https://cdn.jsdelivr.net/gh/lelinh014756/fui-toast-js@master/assets/css/toast@1.0.1/fuiToast.min.css">
+    <script type="text/javascript"
+        src="https://cdn.jsdelivr.net/gh/lelinh014756/fui-toast-js@master/assets/js/toast@1.0.1/fuiToast.min.js"></script>
+    <style>
+        body {
+            font-family: Times New Roman, serif;
+            width: 210mm;
+            padding: 10mm;
+            margin: 0 auto;
+            background: white;
+            box-sizing: border-box;
+            line-height: 1;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0;
+        }
+
+        td {
+            border: 1px solid black;
+            padding: 4px 6px;
+            vertical-align: middle;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .logo img {
+            width: 150px;
+            height: 100px;
+            margin-bottom: 5px;
+        }
+
+        .section-header {
+            background: #e0ffff;
+            text-align: center;
+            font-weight: bold;
+            padding: 5px;
+            border: 1px solid black;
+            border-bottom: none;
+            margin: 15px 0 0 0;
+        }
+
+        .section-header.yellow {
+            background: #ffffd4;
+        }
+
+        .section-content {
+            margin: 0;
+        }
+
+        .student-info {
+            margin: 15px 25px;
+            line-height: 1.5;
+        }
+
+        .grade-rowbo {
+            background: #c5f3a0b2;
+            border: 1px solid black;
+            border-top: none;
+            border-bottom: none;
+        }
+
+        .grade-row td {
+            padding: 2px 5px;
+            border: none;
+        }
+
+        .grade-row td:first-child {
+            width: 50%;
+        }
+
+        .signature-section {
+            margin-top: 25px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .signature-block {
+            text-align: center;
+        }
+
+        .signature-line {
+            margin-top: 90px;
+            min-width: 150px;
+            display: inline-block;
+        }
+
+        i {
+            font-style: italic;
+        }
+
+        .print-button {
+            position: fixed;
+            top: 20px;
+            right: 160px;
+            padding: 10px 24px;
+            background-color: #14b8a6;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .print-button:hover {
+            background-color: #0d9488;
+        }
+
+        /* CSS cho loading spinner */
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        @media print {
+
+            /* Force background colors to print */
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                color-adjust: exact !important;
+            }
+
+            /* Ensure specific section colors are preserved */
+            .section-header {
+                background-color: #e0ffff !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+
+            .section-header.yellow {
+                background-color: #ffffd4 !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+
+            .grade-rowbo {
+                background-color: #c5f3a0b2 !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+
+            /* Hide buttons when printing */
+            .print-button,
+            .edit-button,
+            .save-button {
+                display: none !important;
+            }
+
+            /* Ensure text and borders print clearly */
+            body {
+                print-color-adjust: exact;
+                -webkit-print-color-adjust: exact;
+            }
+
+            table,
+            td {
+                border-color: black !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="loading-overlay">
+        <div class="spinner"></div>
+    </div>
+    <div id="fui-toast"></div>
+    <button onclick="printDocument()" class="action-button print-button">In nhanh</button>
+    <button onclick="editContent()" class="action-button edit-button"
+        style="position: fixed; top: 20px; right: 275px; padding: 10px 24px; background-color: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500;">Chỉnh
+        sửa</button>
+    <button onclick="saveContent()" class="action-button save-button"
+        style="position: fixed; top: 20px; right: 400px; padding: 10px 24px; background-color: #ef4444; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500; display: none;">Lưu
+        lại</button>
+    <!-- Title -->
+    <div id="Conten">
+        <div class="header">
+            <div class="logo">
+                <img src="https://rndwows.github.io/leaedu/lea.png" alt="">
+            </div>
+            <div style="font-weight: bold; font-size: 20px; font-family:Arial, Helvetica, sans-serif">LEA ENGLISH CENTER
+            </div>
+            <div style="font-weight: bold; font-size: 15px; margin: 15px 0 5px 0">BÁO CÁO KẾT QUẢ HỌC TẬP CUỐI KHÓA
+            </div>
+            <div style="font-style: italic; font-size: 15px; font-weight: bold;">(FINAL COURSE REPORT)</div>
+        </div>
+
+        <div class="student-info">
+            <div>Tên học viên (Student's name): <span data-field="Tên KH"></span></div>
+            <div>Lớp (Class): <span data-field="Tên lớp"></span> Ngày thi (Date): <span
+                    data-field="Ngày thi SPE"></span></div>
+        </div>
+
+        <div class="section-header">
+            1. ĐÁNH GIÁ CỦA GIÁO VIÊN TRONG QUÁ TRÌNH HỌC (theo thang điểm từ 0 đến 10)<br>
+            <i>(Teacher's evaluation)</i>
+        </div>
+
+        <table class="section-content" style="padding: 0; text-align: center;">
+            <tr>
+                <td colspan="2" style="font-weight: bold; text-align: center">
+                    Kỷ luật (Classroom discipline)
+                </td>
+                <td></td>
+                <td rowspan="8" style="width: 30% ; font-weight: bold;">
+                    Quá trình học tập<br>
+                    <i>(Learning progress)</i>: (10%)<br><br>
+                    <span data-field="QUÁ TRÌNH (10%)"></span>
+                </td>
+            </tr>
+            <tr>
+                <td rowspan="4" style="width: 25% ; text-align: center; font-weight: bold;">
+                    Kỹ năng ngôn ngữ<br>
+                    <i>(Use of unit skill/language)</i>
+                </td>
+                <td style="width: 25%;">Nghe</td>
+                <td style="width: 20%;"></td>
+            </tr>
+            <tr>
+                <td>Nói</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>Đọc</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>Viết</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td rowspan="3" style="width: 25% ; text-align: center; font-weight: bold;">Chuyên cần<br>
+                    <i>(Class participation)</i>
+                </td>
+                <td>Điểm danh</td>
+                <td></td>
+            </tr>
+            <tr>
+
+                <td>Bài tập về nhà</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>Hoạt động trong lớp</td>
+                <td></td>
+            </tr>
+        </table>
+
+        <div class="section-header">
+            2. KẾT QUẢ BÀI THI (Test result)
+        </div>
+
+        <table class="section-content">
+            <tr>
+                <td style="width: 50%; text-align: right"><strong>Nói (Speaking) :</strong> (25%)</td>
+                <td><span data-field="S-A"></span></td>
+            </tr>
+            <tr>
+                <td style="width: 50%; text-align: right"><strong>Nghe (Listening) :</strong> (25%)</td>
+                <td><span data-field="L-A"></span></td>
+            </tr>
+            <tr>
+                <td style="width: 50%; text-align: right"><strong>Đọc & Viết (Reading & Writing) :</strong> (40%)</td>
+                <td><span data-field="RW-A"></span></td>
+            </tr>
+        </table>
+
+        <div class="section-header yellow">
+            3. KẾT QUẢ CUỐI KHÓA (Final result)
+        </div>
+
+        <table class="section-content">
+            <tr>
+                <td style="width: 50%; text-align: right"><strong>Tổng cộng (Total) :</strong> (100%) </td>
+                <td><span data-field="Điểm"></span></td>
+            </tr>
+            <tr>
+                <td style="width: 50%;">Xếp loại (Rating) : <span style="margin-left: 100px;"
+                        data-field="Xếp loại"></span></td>
+                <td>Good</td>
+            </tr>
+        </table>
+
+        <table class="section-content grade-rowbo">
+            <tr class="grade-row">
+                <td><i><strong>Ghi chú (Note):</strong></i></td>
+                <td>B Good (Khá): 80-89</td>
+            </tr>
+            <tr class="grade-row">
+                <td>A+ Outstanding (Xuất sắc): 98-100</td>
+                <td>C+ Average (Trung bình): 75-79</td>
+            </tr>
+            <tr class="grade-row">
+                <td>A Excellent (Rất giỏi): 93-97</td>
+                <td>C Need improvement (Cần cố gắng hơn): 65-74</td>
+            </tr>
+            <tr class="grade-row">
+                <td>B+ Very good (Giỏi): 90-94</td>
+                <td>D Fail (Không đạt): 65</td>
+            </tr>
+        </table>
+
+        <table>
+            <tr>
+                <td style="width: 50%; height: 60px; font-weight: bold; text-align: center;">
+                    Nhận xét khác<br>
+                    <i>(Other comments)</i>
+                </td>
+                <td><span data-field="Nhận xét giáo viên"></span></td>
+            </tr>
+            <tr>
+                <td style="width: 50%; font-weight: bold; text-align: center;">
+                    Chữ ký GVCN<br>
+                    <i>(Teacher's signature & full name)</i>
+                </td>
+                <td></td>
+            </tr>
+        </table>
+
+        <div class="signature-section">
+            <div class="signature-block">
+                <div>Trưởng bộ phận học vụ<br><i>(Chief Academic Officer)</i></div>
+                <div class="signature-line">Đỗ Thị Kim Thủy</div>
+            </div>
+            <div class="signature-block">
+                <div>
+                    <span data-field="Ngày nhập điểm"></span><br>
+                    Người lập
+                    <i>(Prepared by)</i>
+                </div>
+                <div class="signature-line"><span data-field="Nhân viên nhập điểm"></span></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let editor;
+        function editContent() {
+            $('#Conten').summernote({
+                height: '100vh',
+                width: '100%',
+                minWidth: 1200,
+                focus: true, // Tự động focus khi mở editor
+                lang: 'vi-VN', // Thêm ngôn ngữ tiếng Việt
+                toolbar: [
+                    ['style', ['style']],
+                    ['font', ['bold', 'italic', 'underline', 'strikethrough', 'clear']],
+                    ['fontname', ['fontname']],
+                    ['fontsize', ['fontsize']],
+                    ['color', ['color']],
+                    ['para', ['ul', 'ol', 'paragraph']],
+                    ['table', ['table']],
+                    ['insert', ['link']],
+                    ['view', ['fullscreen', 'codeview', 'help']]
+                ],
+                fontNames: ['Times New Roman'],
+                fontSizes: ['8', '9', '10', '11', '12', '14', '16', '18', '24', '36'],
+                styleTags: ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'],
+                popover: {
+                    table: [
+                        ['add', ['addRowDown', 'addRowUp', 'addColLeft', 'addColRight']],
+                        ['delete', ['deleteRow', 'deleteCol', 'deleteTable']],
+                    ],
+                },
+                callbacks: {
+                    onInit: function () {
+                        document.querySelector('.save-button').style.display = 'block';
+                        document.querySelector('.edit-button').style.display = 'none';
+                        document.querySelector('.print-button').style.display = 'none';
+
+                    },
+                    onChange: function (contents) {
+                        // Thêm auto-save
+                        localStorage.setItem('draft-content', contents);
+                    }
+                }
+            });
+        }
+        async function saveContent() {
+            try {
+                // Show loading overlay
+                document.querySelector('.loading-overlay').style.display = 'flex';
+
+                const contractId = getContractIdFromUrl();
+                if (!contractId) {
+                    FuiToast.error("Không tìm thấy ID hợp đồng");
+                    return;
+                }
+
+                // Get content from Summernote
+                const content = $('#Conten').summernote('code');
+
+                // First, fetch the existing record to get IDLICHTHI and KEY
+                const findResponse = await fetch(`https://${region}.appsheet.com/api/v2/apps/${appId}/tables/DIEMTHI/Action`, {
+                    method: 'POST',
+                    headers: {
+                        'ApplicationAccessKey': accessKey,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        Action: 'Find',
+                        Properties: {},
+                        Selector: `Filter(DIEMTHI, _ComputedKey = '${contractId}')`
+                    })
+                });
+
+                const findData = await findResponse.json();
+                const existingRecord = findData.find(c => c._ComputedKey === contractId);
+
+                if (!existingRecord) {
+                    throw new Error('Không tìm thấy bản ghi');
+                }
+
+                if (!existingRecord.IDLICHTHI || !existingRecord.KEY) {
+                    throw new Error('Thiếu thông tin IDLICHTHI hoặc KEY');
+                }
+
+                const requestBody = {
+                    "Action": "Edit",
+                    "Properties": {
+                        "Locale": "en-US",
+                        "TimeZone": "Asia/Bangkok"
+                    },
+                    "Rows": [{
+                        "_ComputedKey": contractId,
+                        "IDLICHTHI": existingRecord.IDLICHTHI,
+                        "KEY": existingRecord.KEY,
+                        "Html": content
+                    }]
+                };
+
+                console.log('Request body:', JSON.stringify(requestBody));
+                console.log('Existing record:', existingRecord);
+
+                const response = await fetch(`https://${region}.appsheet.com/api/v2/apps/${appId}/tables/DIEMTHI/Action`, {
+                    method: 'POST',
+                    headers: {
+                        'ApplicationAccessKey': accessKey,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                const responseData = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}, message: ${JSON.stringify(responseData)}`);
+                }
+
+                // Destroy Summernote editor
+                $('#Conten').summernote('destroy');
+
+                // Update content and show buttons
+                document.getElementById('Conten').innerHTML = content;
+                document.querySelector('.save-button').style.display = 'none';
+                document.querySelector('.edit-button').style.display = 'block';
+                document.querySelector('.print-button').style.display = 'block';
+
+                FuiToast.success('Lưu thành công');
+                updateGradeDisplay();
+
+            } catch (error) {
+                console.error('Lỗi khi lưu:', error);
+                FuiToast.error(error.message || "Lỗi khi lưu dữ liệu");
+            } finally {
+                // Hide loading overlay
+                document.querySelector('.loading-overlay').style.display = 'none';
+            }
+        }
+
+
+
+        const appId = '237238ed-4230-4db1-ab50-e492cea9cdba';
+        const accessKey = 'V2-GAZkd-YsAqg-LBYbc-LRoOQ-2ZFzj-Imfj1-SodbW-9RtwD';
+        const region = 'www';
+
+        // Add this new function for printing
+        function printDocument() {
+            const printButton = document.querySelector('.print-button');
+            const editContentButton = document.querySelector('.edit-button');
+
+
+            // Hide both buttons
+            if (printButton) printButton.style.display = 'none';
+            if (editContentButton) editContentButton.style.display = 'none';
+
+            // Print the document
+            window.print();
+
+            // Show buttons again after printing
+            if (printButton) printButton.style.display = 'block';
+            if (editContentButton) editContentButton.style.display = 'block';
+        }
+
+        function formatVietnameseDate(dateString) {
+            const date = new Date(dateString);
+            return `Ngày ${String(date.getDate()).padStart(2, '0')} tháng ${String(date.getMonth() + 1).padStart(2, '0')} năm ${date.getFullYear()}`;
+        }
+
+        function formatVietnameseDateshort(dateString) {
+            const date = new Date(dateString);
+            return `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`;
+        }
+
+        function getContractIdFromUrl() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('_ComputedKey');
+        }
+
+        // Find the table rows with grade data
+        function updateGradeDisplay() {
+            // Tìm span chứa giá trị xếp loại
+            const gradeSpan = document.querySelector('span[data-field="Xếp loại"]');
+            if (!gradeSpan) return;
+
+            // Tìm cell hiển thị rating
+            const ratingRow = gradeSpan.closest('tr');
+            if (!ratingRow) return;
+
+            const displayCell = ratingRow.cells[1];
+            if (!displayCell) return;
+
+            // Lấy grade từ span
+            const grade = gradeSpan.textContent.trim();
+
+            // Define rating display mapping
+            const ratingMap = {
+                'A+': 'Outstanding',
+                'A': 'Excellent',
+                'B+': 'Very good',
+                'B': 'Good',
+                'C+': 'Average',
+                'C': 'Need improvement',
+                'D': 'Fail'
+            };
+
+            // Update the display cell với giá trị tương ứng
+            if (grade && ratingMap[grade]) {
+                displayCell.textContent = ratingMap[grade];
+            }
+        }
+
+        async function fetchContractData() {
+            try {
+                const contractId = getContractIdFromUrl();
+                if (!contractId) {
+                    throw new Error('Không tìm thấy số hợp đồng trong URL');
+                }
+
+                const response = await fetch(`https://${region}.appsheet.com/api/v2/apps/${appId}/tables/DIEMTHI/Action`, {
+                    method: 'POST',
+                    headers: {
+                        'ApplicationAccessKey': accessKey,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        Action: 'Find',
+                        Properties: {},
+                        Selector: `Filter(DIEMTHI, _ComputedKey = '${contractId}')`
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                const contract = data.find(c => c._ComputedKey === contractId);
+
+                if (!contract) {
+                    throw new Error(`Không tìm thấy hợp đồng với số: ${contractId}`);
+                }
+
+                // Kiểm tra nếu có dữ liệu HTML được lưu trữ
+                if (contract.Html && contract.Html.trim()) {
+                    // Nếu có, render nội dung HTML đã lưu
+                    document.getElementById('Conten').innerHTML = contract.Html;
+                } else {
+                    // Nếu không có, điền dữ liệu vào template mặc định
+                    document.querySelectorAll('[data-field]').forEach(element => {
+                        const fieldName = element.getAttribute('data-field');
+                        if (contract[fieldName]) {
+                            if (fieldName === 'Ngày nhập điểm') {
+                                element.textContent = formatVietnameseDate(contract[fieldName]);
+                            } else if (fieldName === 'Ngày thi SPE' || fieldName === 'Ngày thi RWL') {
+                                element.textContent = formatVietnameseDateshort(contract[fieldName]);
+                            } else {
+                                element.textContent = contract[fieldName];
+                            }
+                        }
+                    });
+                }
+
+                updateGradeDisplay();
+
+            } catch (error) {
+                console.error('Failed to fetch data:', error);
+                document.body.innerHTML = `<div style="color: red; text-align: center; padding: 20px;">
+            Lỗi khi tải dữ liệu: ${error.message}
+        </div>`;
+            }
+        }
+        window.addEventListener('load', fetchContractData);
+    </script>
+</body>
+
+</html>
