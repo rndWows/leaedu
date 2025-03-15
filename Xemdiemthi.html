@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LEA EDU - Xem Điểm Thi</title>
+    <link rel="shortcut icon"
+        href="https://lea.edu.vn/wp-content/uploads/2023/07/removal.ai_9476a724-4e89-400f-a9e4-e6f4d9c4503d-logo-vector-1.png"
+        type="image/x-icon">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.10.7/dayjs.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/gh/lelinh014756/fui-toast-js@master/assets/css/toast@1.0.1/fuiToast.min.css">
+    <script
+        src="https://cdn.jsdelivr.net/gh/lelinh014756/fui-toast-js@master/assets/js/toast@1.0.1/fuiToast.min.js"></script>
+    <style>
+        .sticky-header {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background-color: white;
+        }
+
+        .content-wrapper {
+            padding-top: 1rem;
+        }
+
+        .score-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: 'Times New Roman', Times, serif;
+        }
+
+        .score-table th,
+        .score-table td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: center;
+        }
+
+        .score-table th {
+            background-color: #e6f7ff;
+        }
+
+        .score-table .student-name {
+            text-align: left;
+        }
+
+        .final-score {
+            color: red;
+            font-weight: bold;
+        }
+
+        body {
+            font-family: 'Times New Roman', Times, serif;
+            background-color: #f9f9f9;
+        }
+
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+
+            body {
+                background-color: white;
+                font-family: 'Times New Roman', Times, serif;
+            }
+
+            .container {
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 font-sans">
+    <div id="fui-toast"></div>
+    <div class="flex flex-col min-h-screen bg-gray-100">
+        <div class="flex-1 p-4 md:p-10">
+            <div class="container mx-auto max-w-8xl">
+                <header class="sticky-header bg-white shadow rounded-lg p-4 md:p-6 mb-6 no-print">
+                    <div class="flex flex-col md:flex-row justify-between items-center">
+                        <img src="https://lea.edu.vn/wp-content/uploads/2023/07/removal.ai_9476a724-4e89-400f-a9e4-e6f4d9c4503d-logo-vector-1.png"
+                            width="100" alt="LEA EDU Logo">
+                        <div class="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-4 mt-4 md:mt-0">
+                            <button id="refreshButton"
+                                class="w-full md:w-auto py-2 px-4 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-300">
+                                <i class="fas fa-sync-alt mr-2"></i>Làm mới dữ liệu
+                            </button>
+
+                        </div>
+                    </div>
+                </header>
+
+                <div class="mb-6 bg-white shadow rounded-lg p-4 md:p-6 no-print">
+                    <h2 class="text-xl md:text-2xl font-semibold mb-4">Thông tin lịch thi</h2>
+                    <div id="examInfo" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    </div>
+                </div>
+
+
+
+                <div class="mb-6 bg-white shadow rounded-lg p-4 md:p-6">
+                    <h2 class="text-xl md:text-2xl font-semibold mb-4 no-print">Danh sách học viên và điểm thi</h2>
+
+                    <!-- Thông tin phía trên bảng khi in -->
+                    <div class="print-only mb-4" style="display: none;">
+                        <div class="text-center mb-4">
+                            <h2 class="text-xl font-bold">BẢNG ĐIỂM THI CUỐI KHÓA</h2>
+                            <p id="printClassName" class="font-semibold mt-2"></p>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2 mb-4">
+                            <div><strong>NGÀY THI:</strong> <span id="printExamDate"></span></div>
+                            <div><strong>CHI NHÁNH:</strong> <span id="printBranch"></span></div>
+                            <div><strong>KỲ THI:</strong> <span id="printExamType"></span></div>
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="score-table">
+                            <thead>
+                                <tr>
+                                    <th rowspan="3" class="align-middle">STT<br>(No)</th>
+                                    <th rowspan="3" class="align-middle student-name">Tên Học Viên<br>(Student's name)
+                                    </th>
+                                    <th rowspan="3" class="align-middle">Quá trình<br>(Learning<br>progress)<br>(10%)
+                                    </th>
+                                    <th colspan="6" class="text-center">Thi cuối khóa (Final Test (90%))</th>
+                                    <th rowspan="3" class="align-middle">Tổng điểm<br>Total<br>score<br>(100%)</th>
+                                    <th rowspan="3" class="align-middle">Kỹ hiệu</th>
+                                </tr>
+                                <tr>
+                                    <th colspan="2" class="text-center">Nói<br>Speaking (25%)</th>
+                                    <th colspan="2" class="text-center">Nghe<br>Listening (25%)</th>
+                                    <th colspan="2" class="text-center">Đọc - Viết<br>Reading & Writing (40%)</th>
+                                </tr>
+                                <tr>
+                                    <th>Điểm/40<br>(Score)</th>
+                                    <th>Tỉ lệ<br>(%)</th>
+                                    <th>Điểm/<span id="maxListening">10</span><br>(Score)</th>
+                                    <th>Tỉ lệ<br>(%)</th>
+                                    <th>Điểm/<span id="maxReading">50</span><br>(Score)</th>
+                                    <th>Tỉ lệ<br>(%)</th>
+
+                                </tr>
+                            </thead>
+                            <tbody id="studentScoreTableBody">
+                                <!-- Dữ liệu sẽ được điền bởi JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <script>
+        const appId = '237238ed-4230-4db1-ab50-e492cea9cdba';
+        const accessKey = 'V2-GAZkd-YsAqg-LBYbc-LRoOQ-2ZFzj-Imfj1-SodbW-9RtwD';
+        let idlop = '';
+        let idlichthi = '';
+        let studentsData = [];
+        let thongtinlichthi = [];
+        let examScores = [];
+
+        async function apiRequest(tableName, action, data, Properties) {
+            const apiUrl = `https://www.appsheet.com/api/v2/apps/${appId}/tables/${tableName}/Action`;
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'ApplicationAccessKey': accessKey,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        Action: action,
+                        ...Properties,
+                        ...data
+                    })
+                });
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response[0].status}`);
+                }
+                return await response.json();
+            } catch (error) {
+                console.error("API Error:", error);
+                throw error;
+            }
+        }
+
+        // Modal handling
+
+
+
+        const fetchScores = async () => {
+            try {
+                const response = await apiRequest('DIEMTHI', 'Find', {}, {
+                    Properties: { Selector: `Filter(DIEMTHI, [IDLICHTHI] = "${idlichthi}" AND [IDLOP] = "${idlop}")` }
+                });
+                examScores = Array.isArray(response) ? response : [];
+            } catch (error) {
+                examScores = [];
+                console.error("Error fetching scores:", error);
+            }
+        };
+
+        const fetchStudents = async () => {
+            try {
+                const response = await apiRequest('Danh sách học viên', 'Find', {}, {
+                    Properties: { Selector: `Filter(Danh sách học viên, [IDLOP] = "${idlop}")` }
+                });
+                studentsData = Array.isArray(response) ? response : [];
+
+                // Merge student data with exam scores
+                if (examScores.length > 0) {
+                    studentsData.forEach(student => {
+                        const scoreData = examScores.find(score => score.KEY === student.IDKH);
+                        if (scoreData) {
+                            student['QUÁ TRÌNH (10%)'] = scoreData['QUÁ TRÌNH (10%)'];
+                            student['S-A'] = scoreData['S-A'];
+                            student['L-A'] = scoreData['L-A'];
+                            student['RW-A'] = scoreData['RW-A'];
+                            student['Điểm'] = scoreData['Điểm'];
+                            student['Xếp loại'] = scoreData['Xếp loại'];
+                            student['Nhận xét giáo viên'] = scoreData['Nhận xét giáo viên'];
+                            student['KEY'] = scoreData['_ComputedKey'];
+                        }
+                    });
+                }
+                renderStudentList();
+            } catch (error) {
+                studentsData = [];
+                console.error("Error fetching students:", error);
+            }
+        };
+
+        const thongtinlop = async () => {
+            try {
+                const response = await apiRequest('LICHTHI', 'Find', {}, {
+                    Properties: { Selector: `Filter(LICHTHI, [IDLICHTHI] = "${idlichthi}")` }
+                });
+                thongtinlichthi = Array.isArray(response) ? response : [];
+                renderExamInfo();
+                updatePrintInfo();
+            } catch (error) {
+                thongtinlichthi = [];
+                console.error("Error fetching exam info:", error);
+            }
+        };
+
+        const renderExamInfo = () => {
+            const examInfoDiv = document.getElementById('examInfo');
+            if (thongtinlichthi.length > 0) {
+                const examInfo = thongtinlichthi[0];
+
+                // Cập nhật thông tin số câu tối đa
+                document.getElementById('maxListening').textContent = examInfo['SL câu L'] || '10';
+                document.getElementById('maxReading').textContent = examInfo['SL câu RW'] || '50';
+
+                examInfoDiv.innerHTML = `
+                <div><strong>Lớp:</strong> ${examInfo['Tên lớp'] || 'N/A'}</div>
+                <div><strong>Nhân sự gác thi nói:</strong> ${examInfo['Nhân sự gác thi nói'] || 'N/A'}</div>
+                <div><strong>Nhân sự gác thi đọc viết:</strong> ${examInfo['Nhân sự gác thi đọc viết'] || 'N/A'}</div>
+                <div><strong>Loại thi:</strong> ${examInfo['Loại thi'] || 'N/A'} || <strong>Tên đề thi:</strong>  ${examInfo['Tên đề thi'] || 'N/A'} </div>
+                <div><strong>Ngày thi SPE:</strong> ${examInfo['Ngày thi SPE'] || 'N/A'}   <strong>Ngày thi RWL:</strong> ${examInfo['Ngày thi RWL'] || 'N/A'} </div>
+
+                <table class="min-w-full bg-white">
+                    <tr>
+                        <th class="px-4 py-2 border">Điểm tối đa SPE</th>
+                        <th hidden class="px-4 py-2 border">Đề thi RWL</th>
+                        <th class="px-4 py-2 border">SL câu RW</th>
+                        <th class="px-4 py-2 border">SL câu L</th>
+                    </tr>
+                    <tr>
+                        <td class="border px-4 py-2">${examInfo['Đề thi SPE'] || 'N/A'}</td>
+                        <td hidden class="border px-4 py-2">${examInfo['Đề thi RWL'] || 'N/A'}</td>
+                        <td class="border px-4 py-2">${examInfo['SL câu RW'] || 'N/A'}</td>
+                        <td class="border px-4 py-2">${examInfo['SL câu L'] || 'N/A'}</td>   
+                    </tr>
+                </table>
+            `;
+            } else {
+                examInfoDiv.innerHTML = '<p>Không có thông tin lịch thi.</p>';
+            }
+        };
+
+        const updatePrintInfo = () => {
+            if (thongtinlichthi.length > 0) {
+                const examInfo = thongtinlichthi[0];
+                document.getElementById('printClassName').textContent = examInfo['Tên lớp'] || '';
+                document.getElementById('printExamDate').textContent =
+                    `${examInfo['Ngày thi SPE'] || ''} - ${examInfo['Ngày thi RWL'] || ''}`;
+                document.getElementById('printBranch').textContent = examInfo['Chi nhánh'] || '';
+                document.getElementById('printExamType').textContent = examInfo['Loại thi'] || '';
+            }
+        };
+
+        // Hàm tính tỉ lệ phần trăm
+        const calculatePercentage = (score, maxScore, tyle) => {
+            if (!score || !maxScore) return '';
+            return (((score / maxScore) * 100 * tyle) / 100).toFixed(1);
+        };
+
+        const renderStudentList = () => {
+            const studentListBody = document.getElementById('studentScoreTableBody');
+            studentListBody.innerHTML = '';
+
+            const maxScoreSpeaking = 40;
+            const maxScoreListening = thongtinlichthi[0]?.['SL câu L'] || 10;
+            const maxScoreReading = thongtinlichthi[0]?.['SL câu RW'] || 50;
+
+            studentsData.forEach((student, index) => {
+                // Tính các tỉ lệ phần trăm
+                const speakingPercent = calculatePercentage(student['S-A'], maxScoreSpeaking, 25);
+                const listeningPercent = calculatePercentage(student['L-A'], maxScoreListening, 25);
+                const readingPercent = calculatePercentage(student['RW-A'], maxScoreReading, 40);
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+            <td class="text-center">${index + 1}</td>
+            <td class="student-name">
+                <a href="https://rndwows.github.io/leaedu/diemthi.html?_ComputedKey=${student['KEY'] || ''}"  target="_blank" > ${student['Tên KH'] || ''} </a>
+              
+            </td>
+            <td class="text-center">${student['QUÁ TRÌNH (10%)'] || ''}</td>
+            <td class="text-center">${student['S-A'] || ''}</td>
+            <td class="text-center">${speakingPercent}</td>
+            <td class="text-center">${student['L-A'] || ''}</td>
+            <td class="text-center">${listeningPercent}</td>
+            <td class="text-center">${student['RW-A'] || ''}</td>
+            <td class="text-center">${readingPercent}</td>
+            <td class="text-center final-score">${student['Điểm'] || ''}</td>
+            <td class="text-center">${student['Xếp loại'] || ''}</td>
+        `;
+                studentListBody.appendChild(row);
+            });
+        };
+
+        const initializeApp = async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            idlop = urlParams.get('idlop');
+            idlichthi = urlParams.get('idlichthi');
+
+            if (!idlop || !idlichthi) {
+                FuiToast.error('Thiếu thông tin idlop hoặc idlichthi trong URL', {
+                    isClose: true,
+                    autoClose: 5000
+                });
+                return;
+            }
+
+            return FuiToast.promise(
+                Promise.all([fetchScores().then(fetchStudents), thongtinlop()]),
+                {
+                    loading: 'Đang tải dữ liệu...',
+                    success: 'Dữ liệu đã được tải thành công!',
+                    error: 'Có lỗi xảy ra khi tải dữ liệu. Vui lòng tải lại trang.',
+                },
+                { isClose: true }
+            );
+        };
+
+        document.addEventListener('DOMContentLoaded', initializeApp);
+        document.getElementById('refreshButton').addEventListener('click', initializeApp);
+
+        // Cập nhật style khi in
+        window.addEventListener('beforeprint', () => {
+            document.querySelectorAll('.print-only').forEach(el => el.style.display = 'block');
+        });
+
+        window.addEventListener('afterprint', () => {
+            document.querySelectorAll('.print-only').forEach(el => el.style.display = 'none');
+        });
+    </script>
+</body>
+
+</html>
