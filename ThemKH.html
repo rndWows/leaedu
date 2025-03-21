@@ -1,0 +1,1925 @@
+<!DOCTYPE html>
+<html lang="vi" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Quản lý KHCN - Hệ thống quản lý thông tin khách hàng cá nhân">
+    <meta name="theme-color" content="#0ea5e9">
+    <title>Quản lý KHCN</title>
+
+    <!-- Preconnect để cải thiện thời gian tải -->
+    <link rel="preconnect" href="https://cdn.tailwindcss.com">
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="shortcut icon" href="https://lea.edu.vn/wp-content/uploads/2023/07/removal.ai_9476a724-4e89-400f-a9e4-e6f4d9c4503d-logo-vector-1.png" type="image/x-icon">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" defer></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            300: '#7dd3fc',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        },
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.3s ease-in-out',
+                        'slide-up': 'slideUp 0.4s ease-out',
+                        'pulse': 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'bounce-in': 'bounceIn 0.5s ease-out',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(10px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' },
+                        },
+                        pulse: {
+                            '0%, 100%': { opacity: '1' },
+                            '50%': { opacity: '.5' },
+                        },
+                        bounceIn: {
+                            '0%': { transform: 'scale(0.9)', opacity: '0' },
+                            '50%': { transform: 'scale(1.03)', opacity: '1' },
+                            '100%': { transform: 'scale(1)', opacity: '1' },
+                        },
+                    },
+                },
+            },
+        }
+    </script>
+
+    <style>
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            @apply bg-gray-100 dark:bg-gray-700;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            @apply bg-gray-400 dark:bg-gray-500;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            @apply bg-gray-500 dark:bg-gray-400;
+        }
+
+        /* Card hover effect */
+        .hover-card {
+            transition: all 0.3s ease;
+        }
+
+        .hover-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Input focus */
+        .custom-input:focus {
+            outline: none;
+            @apply border-primary-500 ring-2 ring-primary-200;
+        }
+
+        .animate-fade-out {
+            animation: fadeOut 0.3s ease-out;
+            opacity: 0;
+        }
+
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+            }
+
+            to {
+                opacity: 0;
+            }
+        }
+
+        /* Dark mode styles */
+        .dark .hover-card {
+            @apply bg-gray-800 text-white;
+        }
+
+        .dark .hover-card:hover {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 dark:bg-gray-900 min-h-screen transition-colors duration-300">
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay"
+        class="fixed inset-0 bg-gray-800/70 dark:bg-black/80 backdrop-blur-sm z-50 flex justify-center items-center hidden transition-opacity duration-300">
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-2xl flex flex-col items-center animate-slide-up">
+            <div class="animate-spin text-primary-600 dark:text-primary-400 mb-4">
+                <i class="fas fa-circle-notch text-5xl"></i>
+            </div>
+            <p class="text-gray-700 dark:text-gray-100 font-medium text-lg" id="loadingText">Đang xử lý...</p>
+        </div>
+    </div>
+
+    <!-- Page Container -->
+    <div class="container mx-auto px-4 md:px-6 lg:px-8 py-8">
+        <!-- Header -->
+        <header class="sticky top-0 z-30 bg-white dark:bg-gray-800 shadow-md rounded-xl px-4 py-4 mb-8">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                <div class="flex items-center space-x-4">
+                    <div class="bg-primary-600 text-white p-3 rounded-lg shadow-lg">
+                        <i class="fas fa-user-graduate text-xl"></i>
+                    </div>
+                    <img src="https://lea.edu.vn/wp-content/uploads/2023/07/removal.ai_9476a724-4e89-400f-a9e4-e6f4d9c4503d-logo-vector-1.png"
+                        alt="LEA Logo" class="h-8">
+                    <h1 class="text-2xl md:text-3xl font-bold text-gray-800 dark:text-white">Quản lý KHCN</h1>
+                </div>
+                <div class="flex items-center mt-4 sm:mt-0">
+                    <button id="refreshDataBtn"
+                        class="p-2 bg-gray-100 dark:bg-gray-700 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors mr-2"
+                        title="Làm mới dữ liệu">
+                        <i class="fas fa-sync-alt text-primary-600 dark:text-primary-400"></i>
+                    </button>
+                    <button id="darkModeToggle"
+                        class="p-2 bg-gray-100 dark:bg-gray-700 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                        title="Chuyển đổi giao diện">
+                        <i class="fas fa-moon text-gray-600 dark:hidden"></i>
+                        <i class="fas fa-sun text-yellow-400 hidden dark:block"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Excel Import Section -->
+        <div class="mb-6 bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md hover-card animate-fade-in">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center">
+                    <div
+                        class="bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300 p-2 rounded-lg mr-3">
+                        <i class="fas fa-file-excel text-xl"></i>
+                    </div>
+                    <h2 class="text-xl font-semibold text-gray-800 dark:text-white">Nhập dữ liệu từ Excel</h2>
+                </div>
+            </div>
+
+            <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
+                <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">
+                    Tải lên file Excel (.xlsx, .xls) có chứa dữ liệu KHCN. File cần có các cột: IDKH, TÊN KH, SĐT, NGÀY
+                    SINH, ĐỊA CHỈ, v.v.
+                </p>
+                <div class="flex flex-wrap gap-3">
+                    <button id="importExcelBtn"
+                        class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded transition flex items-center shadow-sm">
+                        <i class="fas fa-upload mr-2"></i> Chọn file
+                    </button>
+                    <button id="downloadTemplateBtn"
+                        class="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition flex items-center shadow-sm">
+                        <i class="fas fa-download mr-2"></i> Tải mẫu nhập
+                    </button>
+                    <button id="exportExcelBtn"
+                        class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded transition flex items-center shadow-sm">
+                        <i class="fas fa-file-export mr-2"></i> Xuất Excel
+                    </button>
+                </div>
+                <input type="file" id="excelFileInput" accept=".xlsx, .xls, .csv" class="hidden">
+            </div>
+
+            <!-- Preview section (initially hidden) -->
+            <div id="previewSection" class="mt-4 hidden">
+                <h3 class="text-lg font-medium text-gray-800 dark:text-white mb-2">Xem trước dữ liệu (5 dòng đầu tiên):
+                </h3>
+                <div class="overflow-x-auto border rounded-lg dark:border-gray-700">
+                    <table id="previewTable" class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                        <thead class="bg-gray-50 dark:bg-gray-700"></thead>
+                        <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700"></tbody>
+                    </table>
+                </div>
+                <div class="flex justify-end space-x-3 mt-4">
+                    <button id="cancelImportBtn"
+                        class="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition">
+                        Hủy
+                    </button>
+                    <button id="confirmImportBtn"
+                        class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">
+                        Nhập dữ liệu
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <main>
+            <!-- Form thông tin KHCN -->
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md mb-8 hover-card animate-fade-in">
+                <div class="flex items-center mb-4">
+                    <div
+                        class="bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300 p-2 rounded-lg mr-3">
+                        <i class="fas fa-user-plus text-xl"></i>
+                    </div>
+                    <h2 class="text-xl font-semibold text-gray-800 dark:text-white">Thông Tin KHCN</h2>
+                </div>
+
+                <form id="khcnForm" class="mx-auto p-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+                    <!-- Hàng 1: Mã KH và Tên đầy đủ, Ngày ghi nhận -->
+                    <div class="form-group">
+                        <label class="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">Mã KHCN</label>
+                        <div class="relative">
+                            <i
+                                class="fas fa-barcode absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+                            <input type="text" id="idKHCN"
+                                class="w-full text-sm pl-7 pr-2 py-2 border border-gray-300 dark:border-gray-600 rounded bg-gray-50 dark:bg-gray-700 dark:text-white custom-input"
+                                readonly>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">Tên khách hàng
+                            <span class="text-red-500">*</span></label>
+                        <div class="relative">
+                            <i class="fas fa-user absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+                            <input type="text" id="tenKH"
+                                class="w-full text-sm pl-7 pr-2 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 dark:text-white custom-input"
+                                required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">Ngày ghi
+                            nhận</label>
+                        <div class="relative">
+                            <i
+                                class="fas fa-calendar absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+                            <input type="date" id="ngayGhiNhan"
+                                class="w-full text-sm pl-7 pr-2 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 dark:text-white custom-input">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">Số điện thoại
+                            <span class="text-red-500">*</span></label>
+                        <div class="relative">
+                            <i class="fas fa-phone absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+                            <input type="tel" id="sdt"
+                                class="w-full text-sm pl-7 pr-2 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 dark:text-white custom-input"
+                                required>
+                        </div>
+                    </div>
+
+                    <!-- Hàng 2: Ngày sinh, Địa chỉ -->
+                    <div class="form-group">
+                        <label class="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">Ngày sinh</label>
+                        <div class="relative">
+                            <i
+                                class="fas fa-birthday-cake absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+                            <input type="date" id="ngaySinh"
+                                class="w-full text-sm pl-7 pr-2 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 dark:text-white custom-input">
+                        </div>
+                    </div>
+
+                    <div class="form-group sm:col-span-2">
+                        <label class="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">Địa chỉ</label>
+                        <div class="relative">
+                            <i class="fas fa-map-marker-alt absolute left-2 top-2 text-gray-400 text-xs"></i>
+                            <textarea id="diaChi"
+                                class="w-full text-sm pl-7 pr-2 py-2 border border-gray-300 dark:border-gray-600 rounded resize-none bg-white dark:bg-gray-700 dark:text-white custom-input"
+                                rows="1"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">Email</label>
+                        <div class="relative">
+                            <i
+                                class="fas fa-envelope absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+                            <input type="email" id="email"
+                                class="w-full text-sm pl-7 pr-2 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 dark:text-white custom-input">
+                        </div>
+                    </div>
+
+                    <!-- Hàng 3: Nguồn tiếp nhận, Người giới thiệu -->
+                    <div class="form-group">
+                        <label class="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">Nguồn tiếp
+                            nhận</label>
+                        <div class="relative">
+                            <i class="fas fa-stream absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+                            <select id="nguonTiepNhan"
+                                class="w-full text-sm pl-7 pr-8 py-2 border border-gray-300 dark:border-gray-600 rounded appearance-none bg-white dark:bg-gray-700 dark:text-white custom-input">
+                                <option value="">-- Chọn nguồn --</option>
+                                <option value="Facebook">Facebook</option>
+                                <option value="Zalo">Zalo</option>
+                                <option value="Website">Website</option>
+                                <option value="Giới thiệu">Giới thiệu</option>
+                                <option value="Khác">Khác</option>
+                            </select>
+                            <i
+                                class="fas fa-chevron-down absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">Người giới
+                            thiệu</label>
+                        <div class="relative">
+                            <i
+                                class="fas fa-user-friends absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+                            <input type="text" id="nguoiGioiThieu"
+                                class="w-full text-sm pl-7 pr-2 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 dark:text-white custom-input">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">Sales Phụ
+                            Trách</label>
+                        <div class="relative">
+                            <i
+                                class="fas fa-user-tie absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+                            <input type="text" id="salesPhuTrach"
+                                class="w-full text-sm pl-7 pr-2 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 dark:text-white custom-input">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">Đánh giá tiềm
+                            năng</label>
+                        <div class="relative">
+                            <i class="fas fa-star absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+                            <select id="danhGiaTiemNang"
+                                class="w-full text-sm pl-7 pr-8 py-2 border border-gray-300 dark:border-gray-600 rounded appearance-none bg-white dark:bg-gray-700 dark:text-white custom-input">
+                                <option value="">-- Chọn đánh giá --</option>
+                                <option value="Rất cao">Rất cao</option>
+                                <option value="Cao">Cao</option>
+                                <option value="Trung bình">Trung bình</option>
+                                <option value="Thấp">Thấp</option>
+                            </select>
+                            <i
+                                class="fas fa-chevron-down absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+                        </div>
+                    </div>
+
+                    <!-- Thêm datalist để gợi ý tên KHCN cho trường Anh chị em -->
+                    <div class="form-group">
+                        <label class="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">Anh chị
+                            em</label>
+                        <div class="relative">
+                            <i class="fas fa-users absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+                            <input type="text" id="anhChiEm" list="khcnDatalist" placeholder="Nhập và chọn từ danh sách"
+                                class="w-full text-sm pl-7 pr-2 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 dark:text-white custom-input">
+                            <small class="text-xs text-gray-500 dark:text-gray-400 mt-1 block">Nhập nhiều tên cách nhau
+                                bằng dấu phẩy</small>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">Lớp</label>
+                        <div class="relative">
+                            <i class="fas fa-school absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+                            <input type="text" id="lop"
+                                class="w-full text-sm pl-7 pr-2 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 dark:text-white custom-input">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">Trường</label>
+                        <div class="relative">
+                            <i
+                                class="fas fa-university absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+                            <input type="text" id="truong"
+                                class="w-full text-sm pl-7 pr-2 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 dark:text-white custom-input">
+                        </div>
+                    </div>
+
+                    <!-- Hàng 5: Nhu cầu (textarea) -->
+                    <!-- Thay đổi input nhu cầu thành select -->
+                    <div class="form-group sm:col-span-2">
+                        <label class="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">Nhu cầu</label>
+                        <div class="relative">
+                            <i
+                                class="fas fa-clipboard-list absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+                            <select id="nhuCau"
+                                class="w-full text-sm pl-7 pr-8 py-2 border border-gray-300 dark:border-gray-600 rounded appearance-none bg-white dark:bg-gray-700 dark:text-white custom-input">
+                                <option value="">-- Chọn nhu cầu --</option>
+                                <!-- Options will be added dynamically -->
+                            </select>
+                            <i
+                                class="fas fa-chevron-down absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+                        </div>
+                    </div>
+
+                    <!-- Hàng 6: Ghi chú và ghi chú lưu thông tin (textarea) -->
+                    <div class="form-group sm:col-span-2">
+                        <label class="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">Ghi chú</label>
+                        <div class="relative">
+                            <i class="fas fa-sticky-note absolute left-2 top-2 text-gray-400 text-xs"></i>
+                            <textarea id="ghiChu"
+                                class="w-full text-sm pl-7 pr-2 py-2 border border-gray-300 dark:border-gray-600 rounded resize-none bg-white dark:bg-gray-700 dark:text-white custom-input"
+                                rows="2"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="form-group sm:col-span-2">
+                        <label class="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">Ghi chú lưu thông
+                            tin</label>
+                        <div class="relative">
+                            <i class="fas fa-info-circle absolute left-2 top-2 text-gray-400 text-xs"></i>
+                            <textarea id="ghiChuLuuThongTin"
+                                class="w-full text-sm pl-7 pr-2 py-2 border border-gray-300 dark:border-gray-600 rounded resize-none bg-white dark:bg-gray-700 dark:text-white custom-input"
+                                rows="2"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Nút bấm -->
+                    <div class="sm:col-span-4 flex justify-end space-x-2 mt-3">
+                        <button type="button" id="resetFormBtn"
+                            class="px-3 py-1.5 text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-200 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition flex items-center shadow-sm">
+                            <i class="fas fa-redo-alt mr-1"></i> Làm mới
+                        </button>
+                        <button type="submit"
+                            class="px-3 py-1.5 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition flex items-center shadow-sm">
+                            <i class="fas fa-save mr-1"></i> Lưu
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Danh sách KHCN -->
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md mb-8 hover-card animate-fade-in">
+                <div
+                    class="flex flex-col md:flex-row md:items-center md:justify-between border-b border-gray-200 dark:border-gray-700 pb-4 mb-5">
+                    <div class="flex items-center mb-4 md:mb-0">
+                        <div
+                            class="bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300 p-2 rounded-lg mr-3">
+                            <i class="fas fa-list-ul text-xl"></i>
+                        </div>
+                        <h2 class="text-xl font-semibold text-gray-800 dark:text-white">Danh Sách KHCN</h2>
+                    </div>
+                    <div class="relative flex-1 md:max-w-xs">
+                        <input type="text" id="searchInput" placeholder="Tìm kiếm KHCN..."
+                            class="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 dark:text-white">
+                        <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                            <i class="fas fa-search text-gray-400"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Skeleton loading (initially shown) -->
+                <div id="tableSkeletonLoading" class="animate-pulse">
+                    <div class="h-12 bg-gray-200 dark:bg-gray-700 rounded-t-lg mb-1"></div>
+                    <div class="h-16 bg-gray-100 dark:bg-gray-800 mb-1"></div>
+                    <div class="h-16 bg-gray-100 dark:bg-gray-800 mb-1"></div>
+                    <div class="h-16 bg-gray-100 dark:bg-gray-800 mb-1"></div>
+                    <div class="h-16 bg-gray-100 dark:bg-gray-800 mb-1"></div>
+                    <div class="h-16 bg-gray-100 dark:bg-gray-800 rounded-b-lg"></div>
+                </div>
+
+                <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700 hidden"
+                    id="tableContainer">
+                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                        <thead class="bg-gray-50 dark:bg-gray-700">
+                            <tr>
+                                <th scope="col"
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                    Mã KHCN
+                                </th>
+                                <th scope="col"
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                    Tên khách hàng
+                                </th>
+                                <th scope="col"
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                    Số điện thoại
+                                </th>
+                                <th scope="col"
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                    Ngày sinh
+                                </th>
+                                <th scope="col"
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                    Sales phụ trách
+                                </th>
+                                <th scope="col"
+                                    class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                    Thao tác
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody id="khcnTableBody"
+                            class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                            <!-- Dữ liệu sẽ được điền vào đây bằng JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Phân trang -->
+                <div id="pagination"
+                    class="flex justify-between items-center mt-4 px-4 py-3 bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-lg shadow-sm hidden">
+                    <div class="flex-1 flex justify-between sm:hidden">
+                        <button id="prevPageMobile"
+                            class="relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700">
+                            Trước
+                        </button>
+                        <span class="text-sm text-gray-700 dark:text-gray-200">
+                            Trang <span id="currentPageMobile">1</span> / <span id="totalPagesMobile">1</span>
+                        </span>
+                        <button id="nextPageMobile"
+                            class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700">
+                            Sau
+                        </button>
+                    </div>
+                    <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                        <div>
+                            <p class="text-sm text-gray-700 dark:text-gray-200">
+                                Hiển thị <span id="itemsRangeStart">1</span> đến <span id="itemsRangeEnd">10</span> của
+                                <span id="totalItems">0</span> KHCN
+                            </p>
+                        </div>
+                        <div>
+                            <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"
+                                aria-label="Pagination">
+                                <button id="prevPage"
+                                    class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700">
+                                    <i class="fas fa-chevron-left"></i>
+                                </button>
+                                <div id="pageNumbers" class="inline-flex">
+                                    <!-- Page numbers will be inserted here by JS -->
+                                </div>
+                                <button id="nextPage"
+                                    class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700">
+                                    <i class="fas fa-chevron-right"></i>
+                                </button>
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Floating Action Button -->
+        <button id="scrollToTopBtn"
+            class="fixed bottom-5 right-5 p-3 bg-primary-600 text-white rounded-full shadow-lg opacity-0 transition-opacity duration-300 hover:bg-primary-700 focus:outline-none">
+            <i class="fas fa-arrow-up"></i>
+        </button>
+    </div>
+
+    <script>
+        // Cấu hình API
+        const appId = '237238ed-4230-4db1-ab50-e492cea9cdba'; // Thay thế bằng ID ứng dụng của bạn
+        const ACCESS_KEY = 'V2-GAZkd-YsAqg-LBYbc-LRoOQ-2ZFzj-Imfj1-SodbW-9RtwD'; // Thay thế bằng khóa truy cập của bạn
+
+        // Danh sách KHCN và caching
+        let khcnList = [];
+        const API_CACHE_TIME = 5 * 60 * 1000; // 5 phút
+        let khcnCache = {
+            data: [],
+            timestamp: 0
+        };
+        let nguonList = [];
+        let nhuCauList = [];
+        let khcnNameList = [];
+        // Phân trang
+        const ITEMS_PER_PAGE = 10;
+        let currentPage = 1;
+        let filteredList = [];
+
+        // Hàm hiển thị và ẩn loading
+        function showLoading(message = 'Đang xử lý...') {
+            document.getElementById('loadingText').textContent = message;
+            document.getElementById('loadingOverlay').classList.remove('hidden');
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingOverlay').classList.add('hidden');
+        }
+
+        // Hàm hiển thị và ẩn skeleton loading cho bảng
+        function showTableSkeleton() {
+            document.getElementById('tableContainer').classList.add('hidden');
+            document.getElementById('tableSkeletonLoading').classList.remove('hidden');
+            document.getElementById('pagination').classList.add('hidden');
+        }
+
+        function hideTableSkeleton() {
+            document.getElementById('tableContainer').classList.remove('hidden');
+            document.getElementById('tableSkeletonLoading').classList.add('hidden');
+            // Pagination will be shown by renderPage if needed
+        }
+        function formatDateDisplay(dateStr) {
+            if (!dateStr) return '';
+            const parts = dateStr.split('-');
+            if (parts.length !== 3) return dateStr;
+            return `${parts[2]}/${parts[1]}/${parts[0]}`;
+        }
+        // Hàm lấy tham số từ URL
+        function getUrlParameter(name) {
+            name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+            const regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+            const results = regex.exec(location.search);
+            return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+        }
+        function formatDateForInput(dateStr) {
+            if (!dateStr) return '';
+            const parts = dateStr.split('/');
+            if (parts.length !== 3) return dateStr;
+            return `${parts[2]}-${parts[1]}-${parts[0]}`;
+        }
+        // Hàm tạo mã KHCN tự động
+        function generateIdKHCN() {
+            const today = new Date();
+            const year = today.getFullYear().toString().slice(-2);
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+            return `KH${year}${month}${day}${random}`;
+        }
+
+        // Hàm định dạng ngày theo chuẩn yyyy-mm-dd
+        function formatDate(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+
+            return `${year}-${month}-${day}`;
+        }
+
+        // Hàm debounce để tránh gọi nhiều lần liên tiếp
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+        // Hàm lấy danh sách từ các bảng phụ
+        async function loadReferenceData() {
+            try {
+                showLoading('Đang tải dữ liệu...');
+
+                // Lấy danh sách nguồn tiếp nhận
+                const nguonResponse = await axios({
+                    method: 'POST',
+                    url: `https://www.appsheet.com/api/v2/apps/${appId}/tables/Nguon/Action`,
+                    headers: {
+                        'ApplicationAccessKey': ACCESS_KEY,
+                        'Content-Type': 'application/json'
+                    },
+                    data: {
+                        "Action": "Find",
+                        "Properties": {
+                            "Locale": "vi-VN",
+                            "Timezone": "Asia/Ho_Chi_Minh",
+                            "Selector": "Filter(Nguon, true)"
+                        }
+                    }
+                });
+
+                if (nguonResponse.data && nguonResponse.data) {
+                    nguonList = nguonResponse.data;
+
+                }
+
+                // Lấy danh sách nhu cầu
+                const nhuCauResponse = await axios({
+                    method: 'POST',
+                    url: `https://www.appsheet.com/api/v2/apps/${appId}/tables/NhuCau/Action`,
+                    headers: {
+                        'ApplicationAccessKey': ACCESS_KEY,
+                        'Content-Type': 'application/json'
+                    },
+                    data: {
+                        "Action": "Find",
+                        "Properties": {
+                            "Locale": "vi-VN",
+                            "Timezone": "Asia/Ho_Chi_Minh",
+                            "Selector": "Filter(NhuCau, true)"
+                        }
+                    }
+                });
+
+                if (nhuCauResponse.data && nhuCauResponse.data) {
+                    nhuCauList = nhuCauResponse.data;
+
+                }
+
+                hideLoading();
+
+                // Cập nhật các select box
+                updateSelectOptions();
+
+            } catch (error) {
+                console.error('Lỗi khi tải dữ liệu tham chiếu:', error);
+                hideLoading();
+
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Cảnh báo',
+                    text: 'Không thể tải đầy đủ dữ liệu tham chiếu. Một số tính năng có thể bị hạn chế.',
+                    confirmButtonColor: '#0ea5e9'
+                });
+            }
+        }
+        // Cập nhật các select box với dữ liệu từ bảng phụ
+        function updateSelectOptions() {
+            // Cập nhật select nguồn tiếp nhận
+            const nguonSelect = document.getElementById('nguonTiepNhan');
+            nguonSelect.innerHTML = '<option value="">-- Chọn nguồn --</option>';
+            console.log('Nhu cầu:', nhuCauList);
+            console.log('Nguồn tiếp nhận:', nguonList);
+            nguonList.forEach(nguon => {
+                const option = document.createElement('option');
+                option.value = nguon['Nguồn'] || '';
+                option.textContent = nguon['Nguồn'] || '';
+                nguonSelect.appendChild(option);
+            });
+
+            // Cập nhật select nhu cầu
+            const nhuCauSelect = document.getElementById('nhuCau');
+            nhuCauSelect.innerHTML = '<option value="">-- Chọn nhu cầu --</option>';
+
+            nhuCauList.forEach(nhuCau => {
+                const option = document.createElement('option');
+                option.value = nhuCau['Key'] || '';
+                option.textContent = nhuCau['Key'] || '';
+                nhuCauSelect.appendChild(option);
+            });
+
+            // Cập nhật select đánh giá tiềm năng
+            const danhGiaSelect = document.getElementById('danhGiaTiemNang');
+            danhGiaSelect.innerHTML = '<option value="">-- Chọn đánh giá --</option>';
+
+            const danhGiaOptions = [
+                { value: '⭐', text: '⭐ (Thấp)' },
+                { value: '⭐⭐', text: '⭐⭐' },
+                { value: '⭐⭐⭐', text: '⭐⭐⭐ (Trung bình)' },
+                { value: '⭐⭐⭐⭐', text: '⭐⭐⭐⭐' },
+                { value: '⭐⭐⭐⭐⭐', text: '⭐⭐⭐⭐⭐ (Rất cao)' }
+            ];
+
+            danhGiaOptions.forEach(option => {
+                const optionEl = document.createElement('option');
+                optionEl.value = option.value;
+                optionEl.textContent = option.text;
+                danhGiaSelect.appendChild(optionEl);
+            });
+        }
+        // Cập nhật danh sách tên KHCN cho multiselect Anh chị em
+        function updateKHCNListForSelect() {
+            // Lọc danh sách tên KHCN không trùng
+            khcnNameList = Array.from(new Set(khcnList.map(khcn => khcn['Tên KH']).filter(Boolean)));
+
+            // Tạo datalist cho input Anh chị em
+            const datalist = document.getElementById('khcnDatalist') || document.createElement('datalist');
+            datalist.id = 'khcnDatalist';
+            datalist.innerHTML = '';
+
+            khcnNameList.forEach(name => {
+                const option = document.createElement('option');
+                option.value = name;
+                datalist.appendChild(option);
+            });
+
+            if (!document.getElementById('khcnDatalist')) {
+                document.body.appendChild(datalist);
+            }
+        }
+        // Hàm tải danh sách KHCN từ AppSheet API
+        async function loadKHCNList(forceRefresh = false) {
+            try {
+                const now = Date.now();
+
+                // Sử dụng cache nếu còn hạn và không yêu cầu refresh
+                if (!forceRefresh && now - khcnCache.timestamp < API_CACHE_TIME && khcnCache.data.length > 0) {
+                    khcnList = khcnCache.data;
+                    filteredList = khcnList;
+                    renderPage(1); // Reset to first page
+                    hideTableSkeleton();
+                    return true;
+                }
+
+                showTableSkeleton();
+
+                const response = await axios({
+                    method: 'POST',
+                    url: `https://www.appsheet.com/api/v2/apps/${appId}/tables/KHCN/Action`,
+                    headers: {
+                        'ApplicationAccessKey': ACCESS_KEY,
+                        'Content-Type': 'application/json'
+                    },
+                    data: {
+                        "Action": "Find",
+                        "Properties": {
+                            "Locale": "vi-VN",
+                            "Timezone": "Asia/Ho_Chi_Minh",
+                            "Selector": "Filter(KHCN, true)"
+                        }
+                    }
+                });
+
+                if (response.data && response.data.Rows) {
+                    khcnList = response.data.Rows;
+                } else if (Array.isArray(response.data)) {
+                    khcnList = response.data;
+                } else {
+                    console.error('Cấu trúc dữ liệu KHCN không đúng:', response.data);
+                    khcnList = [];
+                }
+
+                // Update cache
+                khcnCache = {
+                    data: khcnList,
+                    timestamp: now
+                };
+
+                // Hiển thị danh sách KHCN với phân trang
+                filteredList = khcnList;
+                renderPage(1); // Reset to first page
+                hideTableSkeleton();
+                return true;
+
+            } catch (error) {
+                console.error('Lỗi khi tải danh sách KHCN:', error);
+                hideTableSkeleton();
+
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Lỗi kết nối',
+                    text: 'Không thể tải danh sách KHCN. Vui lòng thử lại sau.',
+                    confirmButtonColor: '#0ea5e9'
+                });
+
+                return false;
+            }
+        }
+
+        // Hàm hiển thị danh sách KHCN trong bảng với phân trang
+        function renderPage(page) {
+            currentPage = page;
+            const tableBody = document.getElementById('khcnTableBody');
+            tableBody.innerHTML = '';
+
+            if (filteredList.length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="px-6 py-4 text-center text-sm text-gray-500 dark:text-gray-400">
+                            Không có dữ liệu KHCN
+                        </td>
+                    </tr>
+                `;
+                document.getElementById('pagination').classList.add('hidden');
+                return;
+            }
+
+            const start = (page - 1) * ITEMS_PER_PAGE;
+            const end = Math.min(start + ITEMS_PER_PAGE, filteredList.length);
+
+            // Render current page data
+            for (let i = start; i < end; i++) {
+                const khcn = filteredList[i];
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors';
+
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+                        ${khcn['IDKH'] || ''}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
+                        ${khcn['Tên KH'] || ''}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                        ${khcn['Sđt'] || ''}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                        ${khcn['Ngày sinh'] || ''}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                        ${khcn['Sales Phụ Trách'] || ''}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button onclick="editKHCN('${khcn['IDKH'] || ''}')" class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300 mr-3 transition-colors">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="deleteKHCN('${khcn['IDKH'] || ''}')" class="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300 transition-colors">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </td>
+                `;
+
+                tableBody.appendChild(row);
+            }
+
+            // Update pagination
+            updatePagination(page, Math.ceil(filteredList.length / ITEMS_PER_PAGE));
+        }
+
+        // Hàm cập nhật phân trang
+        function updatePagination(currentPage, totalPages) {
+            const paginationElement = document.getElementById('pagination');
+
+            if (totalPages <= 1) {
+                paginationElement.classList.add('hidden');
+                return;
+            } else {
+                paginationElement.classList.remove('hidden');
+            }
+
+            // Update mobile pagination
+            document.getElementById('currentPageMobile').textContent = currentPage;
+            document.getElementById('totalPagesMobile').textContent = totalPages;
+
+            // Update items range
+            document.getElementById('totalItems').textContent = filteredList.length;
+            const start = filteredList.length > 0 ? (currentPage - 1) * ITEMS_PER_PAGE + 1 : 0;
+            const end = Math.min(start + ITEMS_PER_PAGE - 1, filteredList.length);
+            document.getElementById('itemsRangeStart').textContent = start;
+            document.getElementById('itemsRangeEnd').textContent = end;
+
+            // Generate page buttons
+            const pageNumbers = document.getElementById('pageNumbers');
+            pageNumbers.innerHTML = '';
+
+            // Show max 5 page buttons
+            const maxButtons = 5;
+            let startPage = Math.max(1, currentPage - Math.floor(maxButtons / 2));
+            let endPage = Math.min(totalPages, startPage + maxButtons - 1);
+
+            if (endPage - startPage + 1 < maxButtons) {
+                startPage = Math.max(1, endPage - maxButtons + 1);
+            }
+
+            for (let i = startPage; i <= endPage; i++) {
+                const pageBtn = document.createElement('button');
+                pageBtn.classList.add('relative', 'inline-flex', 'items-center', 'px-4', 'py-2', 'border', 'text-sm', 'font-medium');
+
+                if (i === currentPage) {
+                    pageBtn.classList.add('z-10', 'bg-primary-50', 'border-primary-500', 'text-primary-600', 'dark:bg-primary-900', 'dark:border-primary-500', 'dark:text-primary-300');
+                } else {
+                    pageBtn.classList.add('bg-white', 'dark:bg-gray-800', 'border-gray-300', 'dark:border-gray-600', 'text-gray-700', 'dark:text-gray-300', 'hover:bg-gray-50', 'dark:hover:bg-gray-700');
+                }
+
+                pageBtn.textContent = i;
+                pageBtn.addEventListener('click', () => {
+                    renderPage(i);
+                });
+
+                pageNumbers.appendChild(pageBtn);
+            }
+
+            // Update prev/next buttons states
+            const prevBtn = document.getElementById('prevPage');
+            const nextBtn = document.getElementById('nextPage');
+            const prevBtnMobile = document.getElementById('prevPageMobile');
+            const nextBtnMobile = document.getElementById('nextPageMobile');
+
+            prevBtn.disabled = currentPage === 1;
+            nextBtn.disabled = currentPage === totalPages;
+            prevBtnMobile.disabled = currentPage === 1;
+            nextBtnMobile.disabled = currentPage === totalPages;
+
+            // Add/remove disabled styling
+            if (currentPage === 1) {
+                prevBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                prevBtnMobile.classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                prevBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                prevBtnMobile.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+
+            if (currentPage === totalPages) {
+                nextBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                nextBtnMobile.classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                nextBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                nextBtnMobile.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        }
+
+        // Hàm tìm kiếm KHCN
+        function searchKHCN(keyword) {
+            showTableSkeleton();
+
+            setTimeout(() => {
+                if (!keyword) {
+                    filteredList = khcnList;
+                } else {
+                    const searchTerm = keyword.toLowerCase();
+                    filteredList = khcnList.filter(khcn => {
+                        const tenKH = (khcn['Tên KH'] || '').toLowerCase();
+                        const idKH = (khcn['IDKH'] || '').toLowerCase();
+                        const sdt = (khcn['Sđt'] || '').toLowerCase();
+                        const email = (khcn['Email'] || '').toLowerCase();
+                        const diaChi = (khcn['Địa chỉ'] || '').toLowerCase();
+                        const salesPhuTrach = (khcn['Sales Phụ Trách'] || '').toLowerCase();
+
+                        return tenKH.includes(searchTerm) ||
+                            idKH.includes(searchTerm) ||
+                            sdt.includes(searchTerm) ||
+                            email.includes(searchTerm) ||
+                            diaChi.includes(searchTerm) ||
+                            salesPhuTrach.includes(searchTerm);
+                    });
+                }
+
+                renderPage(1); // Reset to first page after search
+                hideTableSkeleton();
+            }, 300); // Slight delay for better UX
+        }
+
+        // Hàm làm mới form
+        function resetForm() {
+            document.getElementById('khcnForm').reset();
+            document.getElementById('idKHCN').value = generateIdKHCN();
+            document.getElementById('ngayGhiNhan').value = formatDate(new Date());
+            document.getElementById('tenKH').focus();
+        }
+
+        // Hàm chỉnh sửa thông tin KHCN
+        // Hàm chỉnh sửa thông tin KHCN
+        function editKHCN(idKH) {
+            const khcn = khcnList.find(kh => kh['IDKH'] === idKH);
+
+            if (!khcn) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Lỗi',
+                    text: 'Không tìm thấy thông tin KHCN',
+                    confirmButtonColor: '#0ea5e9'
+                });
+                return;
+            }
+
+            // Điền thông tin vào form
+            document.getElementById('idKHCN').value = khcn['IDKH'] || '';
+            document.getElementById('tenKH').value = khcn['Tên KH'] || '';
+
+            // Xử lý ngày ghi nhận
+            const ngayGhiNhan = khcn['Ngày ghi nhận'] || formatDate(new Date());
+            document.getElementById('ngayGhiNhan').value = formatDateForInput(ngayGhiNhan);
+
+            document.getElementById('sdt').value = khcn['Sđt'] || '';
+
+            // Xử lý ngày sinh
+            const ngaySinh = khcn['Ngày sinh'] || '';
+            document.getElementById('ngaySinh').value = formatDateForInput(ngaySinh);
+
+            document.getElementById('diaChi').value = khcn['Địa chỉ'] || '';
+            document.getElementById('nguonTiepNhan').value = khcn['Nguồn tiếp nhận'] || '';
+            document.getElementById('nguoiGioiThieu').value = khcn['Người giới thiệu'] || '';
+            document.getElementById('salesPhuTrach').value = khcn['Sales Phụ Trách'] || '';
+            document.getElementById('nhuCau').value = khcn['Nhu cầu'] || '';
+            document.getElementById('ghiChu').value = khcn['Ghi chú'] || '';
+            document.getElementById('anhChiEm').value = khcn['Anh chị em'] || '';
+            document.getElementById('lop').value = khcn['Lớp'] || '';
+            document.getElementById('truong').value = khcn['Trường'] || '';
+            document.getElementById('danhGiaTiemNang').value = khcn['Đánh giá tiềm năng'] || '';
+            document.getElementById('ghiChuLuuThongTin').value = khcn['Ghi chú lưu thông tin'] || '';
+            document.getElementById('email').value = khcn['Email'] || '';
+
+            // Cuộn lên đầu trang để thấy form với hiệu ứng mượt mà
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            // Focus vào trường đầu tiên và hiệu ứng để nhấn mạnh
+            const formElement = document.getElementById('khcnForm').closest('.hover-card');
+            formElement.classList.add('ring-4', 'ring-primary-200', 'dark:ring-primary-800');
+
+            setTimeout(() => {
+                formElement.classList.remove('ring-4', 'ring-primary-200', 'dark:ring-primary-800');
+                document.getElementById('tenKH').focus();
+            }, 1000);
+        }
+
+
+        // Hàm xóa KHCN
+        function deleteKHCN(idKH) {
+            Swal.fire({
+                title: 'Xác nhận xóa',
+                text: 'Bạn có chắc chắn muốn xóa KHCN này không?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Xóa',
+                cancelButtonText: 'Hủy'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    try {
+                        showLoading('Đang xóa KHCN...');
+
+                        // Gọi API để xóa KHCN
+                        await axios({
+                            method: 'POST',
+                            url: `https://www.appsheet.com/api/v2/apps/${appId}/tables/KHCN/Action`,
+                            headers: {
+                                'ApplicationAccessKey': ACCESS_KEY,
+                                'Content-Type': 'application/json'
+                            },
+                            data: {
+                                "Action": "Delete",
+                                "Properties": {
+                                    "Locale": "vi-VN",
+                                    "Timezone": "Asia/Ho_Chi_Minh"
+                                },
+                                "Rows": [
+                                    { "IDKH": idKH }
+                                ]
+                            }
+                        });
+
+                        hideLoading();
+
+                        // Cập nhật lại danh sách
+                        await loadKHCNList(true);
+
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Đã xóa',
+                            text: 'KHCN đã được xóa thành công',
+                            confirmButtonColor: '#0ea5e9',
+                            timer: 1500,
+                            timerProgressBar: true
+                        });
+
+                    } catch (error) {
+                        console.error('Lỗi khi xóa KHCN:', error);
+                        hideLoading();
+
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Lỗi',
+                            text: 'Không thể xóa KHCN. Vui lòng thử lại sau.',
+                            confirmButtonColor: '#d33'
+                        });
+                    }
+                }
+            });
+        }
+
+        // Hàm lưu thông tin KHCN
+        async function saveKHCN(event) {
+            event.preventDefault();
+
+            // Lấy dữ liệu từ form
+            const idKHCN = document.getElementById('idKHCN').value;
+            const tenKH = document.getElementById('tenKH').value.trim();
+            const sdt = document.getElementById('sdt').value.trim();
+
+            // Kiểm tra dữ liệu bắt buộc
+            if (!tenKH || !sdt) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Thiếu thông tin',
+                    text: 'Vui lòng điền đầy đủ tên và số điện thoại của KHCN',
+                    confirmButtonColor: '#0ea5e9'
+                });
+                return;
+            }
+
+            try {
+                showLoading('Đang lưu thông tin KHCN...');
+
+                // Chuyển đổi định dạng ngày tháng
+                const ngayGhiNhan = document.getElementById('ngayGhiNhan').value;
+                const ngaySinh = document.getElementById('ngaySinh').value;
+
+                // Chuẩn bị dữ liệu
+                const khcnData = {
+                    'IDKH': idKHCN,
+                    'Ngày ghi nhận': ngayGhiNhan ? formatDateDisplay(ngayGhiNhan) : formatDateDisplay(formatDate(new Date())),
+                    'Tên KH': tenKH,
+                    'Sđt': sdt,
+                    'Ngày sinh': ngaySinh ? formatDateDisplay(ngaySinh) : '',
+                    'Địa chỉ': document.getElementById('diaChi').value.trim(),
+                    'Nguồn tiếp nhận': document.getElementById('nguonTiepNhan').value,
+                    'Người giới thiệu': document.getElementById('nguoiGioiThieu').value.trim(),
+                    'Sales Phụ Trách': document.getElementById('salesPhuTrach').value.trim(),
+                    'Nhu cầu': document.getElementById('nhuCau').value,
+                    'Ghi chú': document.getElementById('ghiChu').value.trim(),
+                    'Anh chị em': document.getElementById('anhChiEm').value.trim(),
+                    'Lớp': document.getElementById('lop').value.trim(),
+                    'Trường': document.getElementById('truong').value.trim(),
+                    'Đánh giá tiềm năng': document.getElementById('danhGiaTiemNang').value,
+                    'Ghi chú lưu thông tin': document.getElementById('ghiChuLuuThongTin').value.trim(),
+                    'Email': document.getElementById('email').value.trim()
+                };
+
+                // Kiểm tra xem mã KHCN đã tồn tại chưa
+                const existingIndex = khcnList.findIndex(kh => kh['IDKH'] === idKHCN);
+
+                // Xác định thao tác: Thêm mới hoặc cập nhật
+                const action = existingIndex >= 0 ? "Edit" : "Add";
+
+                // Gọi API để lưu thông tin
+                await axios({
+                    method: 'POST',
+                    url: `https://www.appsheet.com/api/v2/apps/${appId}/tables/KHCN/Action`,
+                    headers: {
+                        'ApplicationAccessKey': ACCESS_KEY,
+                        'Content-Type': 'application/json'
+                    },
+                    data: {
+                        "Action": action,
+                        "Properties": {
+                            "Locale": "vi-VN",
+                            "Timezone": "Asia/Ho_Chi_Minh"
+                        },
+                        "Rows": [khcnData]
+                    }
+                });
+
+                // Cập nhật lại danh sách
+                await loadKHCNList(true);
+
+                // Reset form nếu là thêm mới
+                if (action === "Add") {
+                    resetForm();
+                }
+
+                hideLoading();
+
+                Swal.fire({
+                    icon: 'success',
+                    title: action === "Add" ? 'Đã thêm mới' : 'Đã cập nhật',
+                    text: `Thông tin KHCN đã được ${action === "Add" ? 'thêm' : 'cập nhật'} thành công`,
+                    confirmButtonColor: '#0ea5e9',
+                    timer: 1500,
+                    timerProgressBar: true
+                });
+
+            } catch (error) {
+                console.error('Lỗi khi lưu thông tin KHCN:', error);
+                hideLoading();
+
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Lỗi',
+                    text: 'Không thể lưu thông tin KHCN. Vui lòng thử lại sau.',
+                    confirmButtonColor: '#d33'
+                });
+            }
+        }
+        // Hàm xuất dữ liệu ra Excel
+        function exportToExcel() {
+            if (khcnList.length === 0) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Không có dữ liệu',
+                    text: 'Không có dữ liệu KHCN để xuất',
+                    confirmButtonColor: '#0ea5e9'
+                });
+                return;
+            }
+
+            showLoading('Đang chuẩn bị xuất dữ liệu...');
+
+            // Prepare data for export
+            setTimeout(() => {
+                try {
+                    const exportData = [
+                        ['IDKH', 'Ngày ghi nhận', 'Tên KH', 'Sđt', 'Ngày sinh', 'Địa chỉ',
+                            'Nguồn tiếp nhận', 'Người giới thiệu', 'Sales Phụ Trách', 'Nhu cầu',
+                            'Ghi chú', 'Anh chị em', 'Lớp', 'Trường', 'Đánh giá tiềm năng',
+                            'Ghi chú lưu thông tin', 'Email']
+                    ];
+
+                    khcnList.forEach(khcn => {
+                        exportData.push([
+                            khcn['IDKH'] || '',
+                            khcn['Ngày ghi nhận'] || '',
+                            khcn['Tên KH'] || '',
+                            khcn['Sđt'] || '',
+                            khcn['Ngày sinh'] || '',
+                            khcn['Địa chỉ'] || '',
+                            khcn['Nguồn tiếp nhận'] || '',
+                            khcn['Người giới thiệu'] || '',
+                            khcn['Sales Phụ Trách'] || '',
+                            khcn['Nhu cầu'] || '',
+                            khcn['Ghi chú'] || '',
+                            khcn['Anh chị em'] || '',
+                            khcn['Lớp'] || '',
+                            khcn['Trường'] || '',
+                            khcn['Đánh giá tiềm năng'] || '',
+                            khcn['Ghi chú lưu thông tin'] || '',
+                            khcn['Email'] || ''
+                        ]);
+                    });
+
+                    // Create worksheet with better styling
+                    const ws = XLSX.utils.aoa_to_sheet(exportData);
+
+                    // Set column widths
+                    const colWidths = [
+                        { wch: 15 }, // IDKH
+                        { wch: 15 }, // Ngày ghi nhận
+                        { wch: 25 }, // Tên KH
+                        { wch: 15 }, // Sđt
+                        { wch: 15 }, // Ngày sinh
+                        { wch: 30 }, // Địa chỉ
+                        { wch: 15 }, // Nguồn tiếp nhận
+                        { wch: 20 }, // Người giới thiệu
+                        { wch: 20 }, // Sales Phụ Trách
+                        { wch: 30 }, // Nhu cầu
+                        { wch: 30 }, // Ghi chú
+                        { wch: 20 }, // Anh chị em
+                        { wch: 15 }, // Lớp
+                        { wch: 20 }, // Trường
+                        { wch: 15 }, // Đánh giá tiềm năng
+                        { wch: 30 }, // Ghi chú lưu thông tin
+                        { wch: 25 }  // Email
+                    ];
+
+                    ws['!cols'] = colWidths;
+
+                    // Create workbook
+                    const wb = XLSX.utils.book_new();
+                    XLSX.utils.book_append_sheet(wb, ws, "Danh sách KHCN");
+
+                    // Generate filename with date
+                    const now = new Date();
+                    const fileName = `Danh_sach_KHCN_${formatDate(now)}.xlsx`;
+
+                    // Export file
+                    XLSX.writeFile(wb, fileName);
+
+                    hideLoading();
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Xuất dữ liệu thành công',
+                        text: `Đã xuất ${khcnList.length} KHCN ra file Excel`,
+                        confirmButtonColor: '#0ea5e9',
+                        timer: 2000,
+                        timerProgressBar: true
+                    });
+                } catch (error) {
+                    console.error('Lỗi khi xuất dữ liệu:', error);
+                    hideLoading();
+
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Lỗi xuất dữ liệu',
+                        text: 'Không thể xuất dữ liệu ra file Excel. Vui lòng thử lại sau.',
+                        confirmButtonColor: '#d33'
+                    });
+                }
+            }, 500);
+        }
+
+        // Kiểm tra kết nối đến API AppSheet
+        async function testAppSheetConnection() {
+            try {
+                showLoading('Đang kiểm tra kết nối...');
+
+                const response = await axios({
+                    method: 'POST',
+                    url: `https://www.appsheet.com/api/v2/apps/${appId}/tables/KHCN/Action`,
+                    headers: {
+                        'ApplicationAccessKey': ACCESS_KEY,
+                        'Content-Type': 'application/json'
+                    },
+                    data: {
+                        "Action": "Find",
+                        "Properties": {
+                            "Locale": "vi-VN",
+                            "Timezone": "Asia/Ho_Chi_Minh",
+                        }
+                    }
+                });
+
+                hideLoading();
+
+                if (response.status === 200) {
+                    console.log('Kết nối API thành công:', response);
+                    return true;
+                } else {
+                    throw new Error('Phản hồi không thành công');
+                }
+
+            } catch (error) {
+                hideLoading();
+                console.error('Lỗi kết nối API:', error);
+
+                let errorMessage = 'Không thể kết nối đến AppSheet API.';
+                if (error.response) {
+                    errorMessage += ` Status: ${error.response.status}. ${error.response.data?.error || ''}`;
+                }
+
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Lỗi kết nối!',
+                    text: errorMessage,
+                    confirmButtonColor: '#d33'
+                });
+                return false;
+            }
+        }
+
+        // Hàm đọc file Excel
+        async function readExcelFile(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+
+                reader.onload = function (e) {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, { type: 'array' });
+
+                        // Get first sheet
+                        const firstSheetName = workbook.SheetNames[0];
+                        const worksheet = workbook.Sheets[firstSheetName];
+
+                        // Convert to array of arrays
+                        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+                        resolve(jsonData);
+                    } catch (error) {
+                        reject(error);
+                    }
+                };
+
+                reader.onerror = function (error) {
+                    reject(error);
+                };
+
+                reader.readAsArrayBuffer(file);
+            });
+        }
+
+        // Xử lý scroll to top
+        function handleScrollToTop() {
+            const scrollToTopBtn = document.getElementById('scrollToTopBtn');
+
+            // Show/hide button based on scroll position
+            if (window.scrollY > 300) {
+                scrollToTopBtn.classList.remove('opacity-0');
+                scrollToTopBtn.classList.add('opacity-100');
+            } else {
+                scrollToTopBtn.classList.remove('opacity-100');
+                scrollToTopBtn.classList.add('opacity-0');
+            }
+        }
+
+        // Tạo template Excel mẫu
+        function createExcelTemplate() {
+            // Create template data structure
+            const templateData = [
+                // Header row
+                ['IDKH', 'Ngày ghi nhận', 'Tên KH', 'Sđt', 'Ngày sinh', 'Địa chỉ',
+                    'Nguồn tiếp nhận', 'Người giới thiệu', 'Sales Phụ Trách', 'Nhu cầu',
+                    'Ghi chú', 'Anh chị em', 'Lớp', 'Trường', 'Đánh giá tiềm năng',
+                    'Ghi chú lưu thông tin', 'Email'],
+
+                // Example row 1
+                ['KH2503001', '2025-03-21', 'Nguyễn Văn A', '0912345678', '2000-01-15', 'Số 123 Đường XYZ, Quận 1, TP. HCM',
+                    'Facebook', 'Trần Văn B', 'Lê Thị C', 'Tìm hiểu khóa học tiếng Anh',
+                    'Đã gặp trực tiếp', 'Có em trai', 'Lớp 12A1', 'THPT Nguyễn Du', '',
+                    'Cần gọi lại trong tuần sau', 'nguyenvana@example.com'],
+
+                // Example row 2
+                ['KH2503002', '2025-03-22', 'Lê Thị B', '0987654321', '2001-05-20', '45 Đường ABC, Quận 2, TP. HCM',
+                    'Zalo', '', 'Nguyễn Văn D', 'Khóa học IELTS',
+                    'Đã tư vấn qua điện thoại', '', 'Lớp 11A2', 'THPT Lê Quý Đôn', '',
+                    '', 'lethib@example.com']
+            ];
+
+            // Create a worksheet with better styling
+            const ws = XLSX.utils.aoa_to_sheet(templateData);
+
+            // Set column widths for better visibility
+            const colWidths = [
+                { wch: 15 }, // IDKH
+                { wch: 15 }, // Ngày ghi nhận
+                { wch: 25 }, // Tên KH
+                { wch: 15 }, // Sđt
+                { wch: 15 }, // Ngày sinh
+                { wch: 30 }, // Địa chỉ
+                { wch: 15 }, // Nguồn tiếp nhận
+                { wch: 20 }, // Người giới thiệu
+                { wch: 20 }, // Sales Phụ Trách
+                { wch: 30 }, // Nhu cầu
+                { wch: 30 }, // Ghi chú
+                { wch: 20 }, // Anh chị em
+                { wch: 15 }, // Lớp
+                { wch: 20 }, // Trường
+                { wch: 15 }, // Đánh giá tiềm năng
+                { wch: 30 }, // Ghi chú lưu thông tin
+                { wch: 25 }  // Email
+            ];
+
+            ws['!cols'] = colWidths;
+
+            // Create a workbook
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Mẫu KHCN");
+
+            // Generate Excel file and trigger download
+            XLSX.writeFile(wb, "Mau_Nhap_KHCN.xlsx");
+
+            // Show notification
+            Swal.fire({
+                icon: 'success',
+                title: 'Tải mẫu nhập',
+                text: 'Mẫu nhập KHCN đã được tải xuống',
+                confirmButtonColor: '#0ea5e9',
+                timer: 2000,
+                timerProgressBar: true,
+                showConfirmButton: false
+            });
+        }
+
+        // Xử lý nhập dữ liệu từ Excel
+        async function importExcelData() {
+            if (!window.importData || !window.importData.rows || window.importData.rows.length === 0) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Không có dữ liệu',
+                    text: 'Không có dữ liệu để nhập',
+                    confirmButtonColor: '#d33'
+                });
+                return;
+            }
+
+            try {
+                showLoading('Đang nhập dữ liệu KHCN...');
+
+                const headers = window.importData.headers;
+                const rows = window.importData.rows;
+
+                // Find column indexes
+                const idIndex = headers.indexOf('IDKH');
+                const ngayGhiNhanIndex = headers.indexOf('Ngày ghi nhận');
+                const tenIndex = headers.indexOf('Tên KH');
+                const sdtIndex = headers.indexOf('Sđt');
+                const ngaySinhIndex = headers.indexOf('Ngày sinh');
+                const diaChiIndex = headers.indexOf('Địa chỉ');
+                const nguonTiepNhanIndex = headers.indexOf('Nguồn tiếp nhận');
+                const nguoiGioiThieuIndex = headers.indexOf('Người giới thiệu');
+                const salesPhuTrachIndex = headers.indexOf('Sales Phụ Trách');
+                const nhuCauIndex = headers.indexOf('Nhu cầu');
+                const ghiChuIndex = headers.indexOf('Ghi chú');
+                const anhChiEmIndex = headers.indexOf('Anh chị em');
+                const lopIndex = headers.indexOf('Lớp');
+                const truongIndex = headers.indexOf('Trường');
+                const danhGiaTiemNangIndex = headers.indexOf('Đánh giá tiềm năng');
+                const ghiChuLuuThongTinIndex = headers.indexOf('Ghi chú lưu thông tin');
+                const emailIndex = headers.indexOf('Email');
+
+                // Convert rows to KHCN objects
+                const khcnObjects = rows.map(row => {
+                    // Generate ID if not provided
+                    const id = (idIndex >= 0 && row[idIndex]) ? row[idIndex] : generateIdKHCN();
+                    const today = formatDate(new Date());
+
+                    return {
+                        'IDKH': id,
+                        'Ngày ghi nhận': (ngayGhiNhanIndex >= 0 && row[ngayGhiNhanIndex]) ? row[ngayGhiNhanIndex] : today,
+                        'Tên KH': tenIndex >= 0 ? row[tenIndex] : '',
+                        'Sđt': sdtIndex >= 0 ? row[sdtIndex] : '',
+                        'Ngày sinh': ngaySinhIndex >= 0 ? row[ngaySinhIndex] : '',
+                        'Địa chỉ': diaChiIndex >= 0 ? row[diaChiIndex] : '',
+                        'Nguồn tiếp nhận': nguonTiepNhanIndex >= 0 ? row[nguonTiepNhanIndex] : '',
+                        'Người giới thiệu': nguoiGioiThieuIndex >= 0 ? row[nguoiGioiThieuIndex] : '',
+                        'Sales Phụ Trách': salesPhuTrachIndex >= 0 ? row[salesPhuTrachIndex] : '',
+                        'Nhu cầu': nhuCauIndex >= 0 ? row[nhuCauIndex] : '',
+                        'Ghi chú': ghiChuIndex >= 0 ? row[ghiChuIndex] : '',
+                        'Anh chị em': anhChiEmIndex >= 0 ? row[anhChiEmIndex] : '',
+                        'Lớp': lopIndex >= 0 ? row[lopIndex] : '',
+                        'Trường': truongIndex >= 0 ? row[truongIndex] : '',
+                        'Đánh giá tiềm năng': danhGiaTiemNangIndex >= 0 ? row[danhGiaTiemNangIndex] : '',
+                       
+                        'Email': emailIndex >= 0 ? row[emailIndex] : ''
+                    };
+                });
+
+                // Filter out invalid KHCN (must have name and phone)
+                const validKHCN = khcnObjects.filter(khcn =>
+                    khcn['Tên KH'] && khcn['Sđt']
+                );
+
+                if (validKHCN.length === 0) {
+                    throw new Error('Không có dữ liệu KHCN hợp lệ để nhập');
+                }
+
+                // Call API to add KHCN
+                await axios({
+                    method: 'POST',
+                    url: `https://www.appsheet.com/api/v2/apps/${appId}/tables/KHCN/Action`,
+                    headers: {
+                        'ApplicationAccessKey': ACCESS_KEY,
+                        'Content-Type': 'application/json'
+                    },
+                    data: {
+                        "Action": "Add",
+                        "Properties": {
+                            "Locale": "vi-VN",
+                            "Timezone": "Asia/Ho_Chi_Minh"
+                        },
+                        "Rows": validKHCN
+                    }
+                });
+
+                // Reset and hide preview
+                document.getElementById('previewSection').classList.add('hidden');
+                window.importData = null;
+                document.getElementById('excelFileInput').value = '';
+
+                // Reload KHCN list
+                await loadKHCNList(true);
+
+                hideLoading();
+
+                // Show success message
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Nhập dữ liệu thành công',
+                    text: `Đã nhập ${validKHCN.length} KHCN từ file Excel`,
+                    confirmButtonColor: '#0ea5e9'
+                });
+
+            } catch (error) {
+                console.error('Lỗi khi nhập dữ liệu:', error);
+                hideLoading();
+
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Lỗi nhập dữ liệu',
+                    text: error.message || 'Không thể nhập dữ liệu KHCN. Vui lòng thử lại sau.',
+                    confirmButtonColor: '#d33'
+                });
+            }
+        }
+
+        // Khởi tạo ban đầu
+        document.addEventListener('DOMContentLoaded', async function () {
+            try {
+                // Kiểm tra kết nối API
+                const isConnected = await testAppSheetConnection();
+                if (!isConnected) {
+                    throw new Error('Không thể kết nối đến AppSheet API');
+                }
+
+                // Khởi tạo Dark Mode
+                if (localStorage.getItem('darkMode') === 'true' ||
+                    (localStorage.getItem('darkMode') === null &&
+                        window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                    document.documentElement.classList.add('dark');
+                }
+
+                // Dark mode toggle
+                document.getElementById('darkModeToggle').addEventListener('click', function () {
+                    document.documentElement.classList.toggle('dark');
+                    localStorage.setItem('darkMode', document.documentElement.classList.contains('dark'));
+                });
+
+                // Tạo mã KHCN mới
+                document.getElementById('idKHCN').value = generateIdKHCN();
+
+                // Thiết lập ngày ghi nhận mặc định là ngày hôm nay
+                document.getElementById('ngayGhiNhan').value = formatDate(new Date());
+
+                // Thiết lập Sales Phụ Trách từ tham số URL
+                const manv = getUrlParameter('manv');
+                if (manv) {
+                    document.getElementById('salesPhuTrach').value = manv;
+                }
+
+                // Tải dữ liệu tham chiếu (nguồn, nhu cầu)
+                await loadReferenceData();
+
+                // Tải danh sách KHCN
+                await loadKHCNList();
+
+                // Cập nhật danh sách tên KHCN cho multiselect Anh chị em
+                updateKHCNListForSelect();
+
+                // Thiết lập các sự kiện
+                document.getElementById('khcnForm').addEventListener('submit', saveKHCN);
+
+                document.getElementById('resetFormBtn').addEventListener('click', function () {
+                    Swal.fire({
+                        title: 'Xác nhận làm mới',
+                        text: 'Bạn có chắc muốn làm mới form không?',
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonColor: '#0ea5e9',
+                        cancelButtonColor: '#6b7280',
+                        confirmButtonText: 'Đồng ý',
+                        cancelButtonText: 'Hủy'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            resetForm();
+                        }
+                    });
+                });
+
+                // Thiết lập tìm kiếm với debounce
+                const debouncedSearch = debounce(function (e) {
+                    searchKHCN(e.target.value.trim());
+                }, 300);
+
+                document.getElementById('searchInput').addEventListener('input', debouncedSearch);
+
+                // Thiết lập phân trang
+                document.getElementById('prevPage').addEventListener('click', function () {
+                    if (currentPage > 1) {
+                        renderPage(currentPage - 1);
+                    }
+                });
+
+                document.getElementById('nextPage').addEventListener('click', function () {
+                    if (currentPage < Math.ceil(filteredList.length / ITEMS_PER_PAGE)) {
+                        renderPage(currentPage + 1);
+                    }
+                });
+
+                document.getElementById('prevPageMobile').addEventListener('click', function () {
+                    if (currentPage > 1) {
+                        renderPage(currentPage - 1);
+                    }
+                });
+
+                document.getElementById('nextPageMobile').addEventListener('click', function () {
+                    if (currentPage < Math.ceil(filteredList.length / ITEMS_PER_PAGE)) {
+                        renderPage(currentPage + 1);
+                    }
+                });
+
+                // Thiết lập Scroll to Top
+                window.addEventListener('scroll', handleScrollToTop);
+                document.getElementById('scrollToTopBtn').addEventListener('click', function () {
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                });
+
+                // Excel import
+                document.getElementById('importExcelBtn').addEventListener('click', function () {
+                    document.getElementById('excelFileInput').click();
+                });
+
+                document.getElementById('excelFileInput').addEventListener('change', async function (e) {
+                    if (e.target.files.length > 0) {
+                        const file = e.target.files[0];
+                        showLoading('Đang đọc file Excel...');
+
+                        try {
+                            // Read the Excel file
+                            const data = await readExcelFile(file);
+
+                            if (!data || data.length <= 1) { // Check if there's actual data (beyond header row)
+                                throw new Error('File không chứa dữ liệu hợp lệ');
+                            }
+
+                            // Extract header row
+                            const headers = data[0];
+                            const requiredColumns = ['Tên KH', 'Sđt'];
+
+                            // Validate required columns
+                            let missingColumns = [];
+                            requiredColumns.forEach(col => {
+                                if (!headers.includes(col)) {
+                                    missingColumns.push(col);
+                                }
+                            });
+
+                            if (missingColumns.length > 0) {
+                                throw new Error(`File thiếu các cột bắt buộc: ${missingColumns.join(', ')}`);
+                            }
+
+                            // Prepare data for preview (up to 5 rows)
+                            const previewData = data.slice(1, 6);
+
+                            // Show preview section
+                            const previewSection = document.getElementById('previewSection');
+                            previewSection.classList.remove('hidden');
+
+                            // Create preview table headers
+                            const theadEl = document.querySelector('#previewTable thead');
+                            let theadHTML = '<tr>';
+
+                            headers.forEach(header => {
+                                theadHTML += `<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">${header}</th>`;
+                            });
+
+                            theadHTML += '</tr>';
+                            theadEl.innerHTML = theadHTML;
+
+                            // Create preview table body
+                            const tbodyEl = document.querySelector('#previewTable tbody');
+                            let tbodyHTML = '';
+
+                            previewData.forEach(row => {
+                                tbodyHTML += '<tr class="hover:bg-gray-50 dark:hover:bg-gray-700">';
+
+                                headers.forEach((col, index) => {
+                                    const value = row[index] || '';
+                                    tbodyHTML += `<td class="px-6 py-4 whitespace-nowrap text-sm ${index === 0 ? 'font-medium text-gray-900 dark:text-white' : 'text-gray-700 dark:text-gray-300'}">${value}</td>`;
+                                });
+
+                                tbodyHTML += '</tr>';
+                            });
+
+                            tbodyEl.innerHTML = tbodyHTML;
+
+                            // Store the full data for later use when confirming import
+                            window.importData = {
+                                headers: headers,
+                                rows: data.slice(1) // Skip header row
+                            };
+
+                            hideLoading();
+
+                            // Scroll to preview section
+                            previewSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+                        } catch (error) {
+                            console.error('Error reading Excel file:', error);
+                            hideLoading();
+
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Lỗi đọc file',
+                                text: error.message || 'Không thể đọc file Excel. Vui lòng kiểm tra định dạng file.',
+                                confirmButtonColor: '#d33'
+                            });
+
+                            // Reset file input
+                            e.target.value = '';
+                        }
+                    }
+                });
+
+                document.getElementById('cancelImportBtn').addEventListener('click', function () {
+                    document.getElementById('previewSection').classList.add('hidden');
+                    document.getElementById('excelFileInput').value = '';
+                    window.importData = null;
+                });
+
+                document.getElementById('confirmImportBtn').addEventListener('click', importExcelData);
+                document.getElementById('downloadTemplateBtn').addEventListener('click', createExcelTemplate);
+                document.getElementById('exportExcelBtn').addEventListener('click', exportToExcel);
+                document.getElementById('refreshDataBtn').addEventListener('click', async function () {
+                    await loadKHCNList(true);
+
+                    // Cập nhật lại danh sách tên KHCN cho autocomplete
+                    updateKHCNListForSelect();
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Dữ liệu đã được làm mới',
+                        timer: 1500,
+                        timerProgressBar: true,
+                        showConfirmButton: false
+                    });
+                });
+
+                // Xử lý cho trường Anh chị em
+                document.getElementById('anhChiEm').addEventListener('input', function (e) {
+                    const input = e.target.value;
+                    // Kiểm tra nếu người dùng vừa nhập dấu phẩy
+                    if (input.endsWith(', ')) {
+                        // Focus lại vào input để tiếp tục nhập
+                        setTimeout(() => {
+                            e.target.focus();
+                        }, 10);
+                    }
+                });
+
+            } catch (error) {
+                console.error('Lỗi khởi tạo:', error);
+
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Lỗi khởi tạo',
+                    text: 'Đã xảy ra lỗi khi khởi tạo ứng dụng. Vui lòng thử lại sau.',
+                    confirmButtonColor: '#d33'
+                });
+            }
+        });
+        // Export các hàm để có thể gọi từ HTML
+        window.editKHCN = editKHCN;
+        window.deleteKHCN = deleteKHCN;
+    </script>
+</body>
+
+</html>
