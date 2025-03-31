@@ -440,12 +440,14 @@
                 row.dataset.idkh = student.IDKH;
                 row.innerHTML = `
                     <td class="border px-2 py-2">${student['Tên KH'] || ''}</td>
-                    <td class="border px-2 py-2">
-                        <input type="number" class="w-full px-2 py-1 border rounded" data-field="listening" min="0" max="40" value="${ielts?.listening || ''}" placeholder="0-40">
-                    </td>
-                    <td class="border px-2 py-2">
-                        <input type="number" class="w-full px-2 py-1 border rounded" data-field="reading" min="0" max="40" value="${ielts?.reading || ''}" placeholder="0-40">
-                    </td>
+                     <td class="border px-2 py-2">
+        <input type="number" class="w-full px-2 py-1 border rounded" data-field="listening" min="0" max="40" value="${ielts?.listening || ''}" placeholder="0-40">
+        ${ielts?.listening ? `<div class="listening-band text-xs text-gray-700 mt-1">Band: ${convertListeningToBand(parseFloat(ielts.listening)).toFixed(1)}</div>` : ''}
+    </td>
+    <td class="border px-2 py-2">
+        <input type="number" class="w-full px-2 py-1 border rounded" data-field="reading" min="0" max="40" value="${ielts?.reading || ''}" placeholder="0-40">
+        ${ielts?.reading ? `<div class="reading-band text-xs text-gray-700 mt-1">Band: ${convertReadingToBand(parseFloat(ielts.reading)).toFixed(1)}</div>` : ''}
+    </td>
                     <td class="border px-2 py-2">
                         <div class="flex items-center">
                             <input type="number" class="w-16 px-2 py-1 border rounded" data-field="speaking" min="0" max="9" step="0.5" value="${ielts?.speaking || ''}" disabled>
@@ -744,7 +746,7 @@
             return true;
         }
         function setupInputValidation() {
-            document.querySelectorAll('#studentTable input[data-field="listening"], #studentTable input[data-field="reading"]').forEach(input => {
+            document.querySelectorAll('#studentTable input[data-field="listening"]').forEach(input => {
                 input.addEventListener('input', function (e) {
                     const value = parseFloat(this.value);
                     if (!isNaN(value) && (value < 0 || value > 40)) {
@@ -752,12 +754,25 @@
                     } else {
                         this.classList.remove('invalid-input');
                     }
-                    updateScore(e);
+                    updateListeningBandDisplay(this);
+                });
+            });
+
+            document.querySelectorAll('#studentTable input[data-field="reading"]').forEach(input => {
+                input.addEventListener('input', function (e) {
+                    const value = parseFloat(this.value);
+                    if (!isNaN(value) && (value < 0 || value > 40)) {
+                        this.classList.add('invalid-input');
+                    } else {
+                        this.classList.remove('invalid-input');
+                    }
+                    updateReadingBandDisplay(this);
                 });
             });
         }
         // Lưu dữ liệu vào bảng IELTS
         // Sửa hàm lưu dữ liệu
+
         async function saveIELTSData() {
             if (!validateData()) return;
 
@@ -766,69 +781,60 @@
                 const teacherName = document.getElementById('teacherName').value;
                 const currentDate = document.getElementById('entryDate').value || new Date().toISOString().split('T')[0];
 
-                let hasInvalidData = false;
-
                 // Thu thập dữ liệu từ các dòng
                 document.querySelectorAll('#studentTable tr[data-idkh]').forEach(row => {
+                    const idkh = row.dataset.idkh;
                     const listening = row.querySelector('[data-field="listening"]').value;
                     const reading = row.querySelector('[data-field="reading"]').value;
                     const speaking = row.querySelector('[data-field="speaking"]').value;
                     const writing = row.querySelector('[data-field="writing"]').value;
+                    const comment = row.querySelector('[data-field="comment"]').value || '';
 
-                    // Kiểm tra điểm đã nhập đầy đủ
-                    if (listening && reading && speaking && writing) {
-                        const idkh = row.dataset.idkh;
-                        const comment = row.querySelector('[data-field="comment"]').value || '';
+                    // Chuyển đổi sang số
+                    const listeningNum = parseFloat(listening) || 0;
+                    const readingNum = parseFloat(reading) || 0;
+                    const speakingNum = parseFloat(speaking) || 0;
+                    const writingNum = parseFloat(writing) || 0;
 
-                        // Chuyển đổi sang số
-                        const listeningNum = parseFloat(listening);
-                        const readingNum = parseFloat(reading);
-                        const speakingNum = parseFloat(speaking);
-                        const writingNum = parseFloat(writing);
+                    // Lấy thông tin chi tiết
+                    const speakingDetails = row.querySelector('td:nth-child(4) .text-xs').textContent;
+                    const writingDetails = row.querySelector('td:nth-child(5) .text-xs').textContent;
 
-                        // Kiểm tra phạm vi hợp lệ
-                        if (listeningNum < 0 || listeningNum > 40) {
-                            row.querySelector('[data-field="listening"]').classList.add('invalid-input');
-                            hasInvalidData = true;
-                            return;
-                        }
+                    // Lấy giá trị từ chuỗi chi tiết
+                    const s_fl = parseFloat(speakingDetails.split('FL:')[1]?.split(',')[0]?.trim().replace('-', '0')) || 0;
+                    const s_lr = parseFloat(speakingDetails.split('LR:')[1]?.split(',')[0]?.trim().replace('-', '0')) || 0;
+                    const s_ga = parseFloat(speakingDetails.split('GA:')[1]?.split(',')[0]?.trim().replace('-', '0')) || 0;
+                    const s_pr = parseFloat(speakingDetails.split('PR:')[1]?.split(',')[0]?.trim().replace('-', '0')) || 0;
 
-                        if (readingNum < 0 || readingNum > 40) {
-                            row.querySelector('[data-field="reading"]').classList.add('invalid-input');
-                            hasInvalidData = true;
-                            return;
-                        }
+                    const w_ta = parseFloat(writingDetails.split('TA:')[1]?.split(',')[0]?.trim().replace('-', '0')) || 0;
+                    const w_lr = parseFloat(writingDetails.split('LR:')[1]?.split(',')[0]?.trim().replace('-', '0')) || 0;
+                    const w_ga = parseFloat(writingDetails.split('GA:')[1]?.split(',')[0]?.trim().replace('-', '0')) || 0;
+                    const w_cc = parseFloat(writingDetails.split('CC:')[1]?.split(',')[0]?.trim().replace('-', '0')) || 0;
 
-                        // Lấy thông tin chi tiết
-                        const speakingDetails = row.querySelector('td:nth-child(4) .text-xs').textContent;
-                        const writingDetails = row.querySelector('td:nth-child(5) .text-xs').textContent;
+                    // Chuyển đổi điểm số nếu có giá trị
+                    const listeningBand = listeningNum ? convertListeningToBand(listeningNum) : 0;
+                    const readingBand = readingNum ? convertReadingToBand(readingNum) : 0;
 
-                        // Lấy giá trị từ chuỗi chi tiết
-                        const s_fl = parseFloat(speakingDetails.split('FL:')[1]?.split(',')[0]?.trim()) || 0;
-                        const s_lr = parseFloat(speakingDetails.split('LR:')[1]?.split(',')[0]?.trim()) || 0;
-                        const s_ga = parseFloat(speakingDetails.split('GA:')[1]?.split(',')[0]?.trim()) || 0;
-                        const s_pr = parseFloat(speakingDetails.split('PR:')[1]?.split(',')[0]?.trim().replace('-', '0')) || 0;
+                    // Tính điểm tổng nếu có đủ 4 kỹ năng
+                    let totalScore = 0;
+                    let roundedScore = 0;
 
-                        const w_ta = parseFloat(writingDetails.split('TA:')[1]?.split(',')[0]?.trim()) || 0;
-                        const w_lr = parseFloat(writingDetails.split('LR:')[1]?.split(',')[0]?.trim()) || 0;
-                        const w_ga = parseFloat(writingDetails.split('GA:')[1]?.split(',')[0]?.trim()) || 0;
-                        const w_cc = parseFloat(writingDetails.split('CC:')[1]?.split(',')[0]?.trim().replace('-', '0')) || 0;
+                    if (listeningNum && readingNum && speakingNum && writingNum) {
+                        totalScore = (listeningBand + readingBand + speakingNum + writingNum) / 4;
+                        roundedScore = Math.round(totalScore * 2) / 2;
+                    }
 
-                        // Chuyển đổi điểm số
-                        const listeningBand = convertListeningToBand(listeningNum);
-                        const readingBand = convertReadingToBand(readingNum);
-
-                        // Tính điểm tổng
-                        const totalScore = (listeningBand + readingBand + speakingNum + writingNum) / 4;
-                        const roundedScore = Math.round(totalScore * 2) / 2;
-
+                    // Chỉ lưu khi có ít nhất một giá trị
+                    if (listeningNum || readingNum || speakingNum || writingNum || comment) {
                         rows.push({
                             'KEY': idkh,
                             'IDLOP': idlop,
                             'Ngày nhập điểm': currentDate,
                             'Listening': listeningNum,
                             'Reading': readingNum,
+                            'Điểm Listening' : listeningBand,
                             'Speaking': speakingNum,
+                            'Điểm Reading' : readingBand,
                             'Writing': writingNum,
                             'Tổng điểm': roundedScore.toFixed(1),
                             'Nhận xét': comment,
@@ -845,18 +851,9 @@
                     }
                 });
 
-                // Hiển thị lỗi nếu có dữ liệu không hợp lệ
-                if (hasInvalidData) {
-                    FuiToast.error('Điểm Listening và Reading phải trong khoảng 0-40', {
-                        isClose: true,
-                        autoClose: 3000
-                    });
-                    return;
-                }
-
                 // Kiểm tra nếu không có dữ liệu nào
                 if (rows.length === 0) {
-                    FuiToast.error('Không có dữ liệu nào được nhập đầy đủ để lưu', {
+                    FuiToast.error('Không có dữ liệu nào được nhập để lưu', {
                         isClose: true,
                         autoClose: 3000
                     });
@@ -882,6 +879,42 @@
                     autoClose: 5000
                 });
             }
+        }
+        // Thêm các hàm này vào code hiện tại
+        function updateListeningBandDisplay(input) {
+            const row = input.closest('tr');
+            const rawScore = parseFloat(input.value) || 0;
+            const band = convertListeningToBand(rawScore);
+
+            // Tạo hoặc cập nhật phần hiển thị
+            let display = row.querySelector('.listening-band');
+            if (!display) {
+                display = document.createElement('div');
+                display.className = 'listening-band text-xs text-gray-700 mt-1';
+                input.parentNode.appendChild(display);
+            }
+            display.textContent = `Band: ${band.toFixed(1)}`;
+
+            // Cập nhật điểm tổng
+            updateTotalScore(row);
+        }
+
+        function updateReadingBandDisplay(input) {
+            const row = input.closest('tr');
+            const rawScore = parseFloat(input.value) || 0;
+            const band = convertReadingToBand(rawScore);
+
+            // Tạo hoặc cập nhật phần hiển thị
+            let display = row.querySelector('.reading-band');
+            if (!display) {
+                display = document.createElement('div');
+                display.className = 'reading-band text-xs text-gray-700 mt-1';
+                input.parentNode.appendChild(display);
+            }
+            display.textContent = `Band: ${band.toFixed(1)}`;
+
+            // Cập nhật điểm tổng
+            updateTotalScore(row);
         }
         // Khởi tạo ứng dụng
         // Sửa đổi hàm initApp để lấy teacherName từ URL
