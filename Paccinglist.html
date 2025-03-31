@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LEA EDU - Pacing List</title>
+    <link rel="shortcut icon"
+        href="https://lea.edu.vn/wp-content/uploads/2023/07/removal.ai_9476a724-4e89-400f-a9e4-e6f4d9c4503d-logo-vector-1.png"
+        type="image/x-icon">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.10.7/dayjs.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/gh/lelinh014756/fui-toast-js@master/assets/css/toast@1.0.1/fuiToast.min.css">
+    <script
+        src="https://cdn.jsdelivr.net/gh/lelinh014756/fui-toast-js@master/assets/js/toast@1.0.1/fuiToast.min.js"></script>
+    <style>
+        .sticky-header {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background-color: white;
+        }
+
+        .content-wrapper {
+            padding-top: 1rem;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            overflow-y: auto;
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 font-sans">
+    <div id="fui-toast"></div>
+    <div class="flex flex-col min-h-screen bg-gray-100">
+        <div class="flex-1 p-4 md:p-10">
+            <div class="container mx-auto max-w-8xl">
+                <header class="sticky-header bg-white shadow rounded-lg p-4 md:p-6 mb-6">
+                    <div class="flex flex-col md:flex-row justify-between items-center">
+                        <img src="https://lea.edu.vn/wp-content/uploads/2023/07/removal.ai_9476a724-4e89-400f-a9e4-e6f4d9c4503d-logo-vector-1.png"
+                            width="100" alt="LEA EDU Logo">
+                        <div class="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-4 mt-4 md:mt-0">
+                            <button id="refreshButton"
+                                class="w-full md:w-auto py-2 px-4 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-300">
+                                <i class="fas fa-sync-alt mr-2"></i>Làm mới dữ liệu
+                            </button>
+                            <button id="syncButton"
+                                class="w-full md:w-auto py-2 px-4 bg-green-500 text-white rounded hover:bg-green-600 transition duration-300">
+                                <i class="fas fa-cloud-upload-alt mr-2"></i>Lưu thông tin
+                            </button>
+                        </div>
+                    </div>
+                </header>
+
+                <div class="mb-6 bg-white shadow rounded-lg p-4 md:p-6">
+                    <h2 class="text-xl md:text-2xl font-semibold mb-4">Thông tin lớp</h2>
+                    <div id="classInfo" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    </div>
+                </div>
+
+                <div class="mb-6 bg-white shadow rounded-lg p-4 md:p-6">
+                    <h2 class="text-xl md:text-2xl font-semibold mb-4">Danh sách Pacing</h2>
+
+                    <div class="overflow-x-auto">
+                        <table id="pacingListTable" class="min-w-full bg-white">
+                            <thead>
+                                <tr>
+                                    <th class="px-4 py-2 border">Buổi</th>
+                                    <th class="px-4 py-2 border">Nội dung</th>
+                                    <th class="px-4 py-2 border">Ngày đăng ký</th>
+                                    <th class="px-4 py-2 border">Ngày thực tế học</th>
+                                    <th class="px-4 py-2 border">Giáo viên dạy</th>
+                                    <th class="px-4 py-2 border">Báo bài</th>
+                                    <th class="px-4 py-2 border">Từ giờ đến</th>
+                                    <th class="px-4 py-2 border">Đến giờ</th>
+                                    <th class="px-4 py-2 border">Ghi chú</th>
+                                    <th class="px-4 py-2 border">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal chỉnh sửa -->
+    <div id="editModal" class="modal">
+        <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-2xl mx-4">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-semibold">Chỉnh sửa thông tin buổi học</h3>
+                <button id="closeModal" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="editForm" class="space-y-4">
+                <input type="hidden" id="editPacingId">
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-2">Buổi</label>
+                        <input type="text" id="editBuoi" class="w-full px-3 py-2 border rounded bg-gray-100" disabled>
+                    </div>
+
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-2">Ngày đăng ký</label>
+                        <input type="text" id="editNgayDangKy" class="w-full px-3 py-2 border rounded bg-gray-100"
+                            disabled>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-gray-700 font-medium mb-2">Nội dung</label>
+                    <textarea id="editNoiDung" class="w-full px-3 py-2 border rounded bg-gray-100" rows="2"
+                        disabled></textarea>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-2">Ngày thực tế học <span
+                                class="text-red-500">*</span></label>
+                        <div class="flex">
+                            <input type="date" id="editNgayThucTeHoc" class="w-full px-3 py-2 border rounded">
+                            <button type="button" id="today-button"
+                                class="ml-2 px-3 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                                <i class="fas fa-calendar-day"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-2">Giáo viên dạy <span
+                                class="text-red-500">*</span></label>
+                        <select id="editGiaoVienDay" class="w-full px-3 py-2 border rounded">
+                            <option value="">Chọn giáo viên</option>
+                        </select>
+                    </div>
+
+                </div>
+
+                <div>
+                    <label class="block text-gray-700 font-medium mb-2">Báo bài</label>
+                    <div class="flex flex-col">
+                        <textarea id="editBaoBai" class="w-full px-3 py-2 border rounded" rows="3"></textarea>
+                        <button type="button" id="get-content-button"
+                            class="mt-2 px-3 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                            <i class="fas fa-sync-alt mr-2"></i>Lấy từ nội dung
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-2">Từ giờ đến</label>
+                        <input type="time" id="editTuGioDen" class="w-full px-3 py-2 border rounded">
+                    </div>
+
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-2">Đến giờ</label>
+                        <input type="time" id="editDenGio" class="w-full px-3 py-2 border rounded">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-gray-700 font-medium mb-2">Ghi chú</label>
+                    <textarea id="editGhiChu" class="w-full px-3 py-2 border rounded" rows="3"></textarea>
+                </div>
+
+                <div class="flex justify-end space-x-3 pt-4">
+                    <button type="button" id="cancelButton"
+                        class="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400">Hủy</button>
+                    <button type="submit" class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">Lưu thay
+                        đổi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Datalist cho giáo viên -->
+    <datalist id="teacher-list"></datalist>
+
+    <script>
+        const appId = '237238ed-4230-4db1-ab50-e492cea9cdba';
+        const accessKey = 'V2-GAZkd-YsAqg-LBYbc-LRoOQ-2ZFzj-Imfj1-SodbW-9RtwD';
+        let idlop = '';
+        let giaotrinh = '';
+        let pacingData = [];
+        let classInfo = {};
+        let currentEditId = null;
+
+        // API Request Function
+        async function apiRequest(tableName, action, data, Properties) {
+            const apiUrl = `https://www.appsheet.com/api/v2/apps/${appId}/tables/${tableName}/Action`;
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'ApplicationAccessKey': accessKey,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        Action: action,
+                        ...Properties,
+                        ...data
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                // Xử lý response theo action
+                if (action === 'Edit') {
+                    // Với action Edit, trả về status để xác nhận thành công
+                    return response.status;
+                }
+
+                // Kiểm tra có dữ liệu JSON không
+                const text = await response.text();
+                if (!text) return response.status;
+
+                try {
+                    return JSON.parse(text);
+                } catch (e) {
+                    console.warn('Response không phải JSON hợp lệ:', text);
+                    return response.status;
+                }
+            } catch (error) {
+                console.error("API Error:", error);
+                throw error;
+            }
+        }
+
+        // Fetch Pacing Data
+        const fetchPacingData = async () => {
+            try {
+                const response = await apiRequest('PaccingLOP', 'Find', {}, {
+                    Properties: { Selector: `Filter(PaccingLOP, and([IDLOP] = "${idlop}", [Giáo trình] = "${giaotrinh}"))` }
+                });
+                pacingData = Array.isArray(response) ? response : [];
+                return pacingData;
+            } catch (error) {
+                console.error("Lỗi khi tải dữ liệu pacing:", error);
+                pacingData = [];
+                return [];
+            }
+        };
+        // Nút lấy ngày hiện tại
+        document.getElementById('today-button').addEventListener('click', () => {
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+            document.getElementById('editNgayThucTeHoc').value = `${yyyy}-${mm}-${dd}`;
+        });
+
+        // Nút lấy từ nội dung
+        document.getElementById('get-content-button').addEventListener('click', () => {
+            const content = document.getElementById('editNoiDung').value;
+            document.getElementById('editBaoBai').value = content;
+        });
+
+        // Fetch Class Info
+        const fetchClassInfo = async () => {
+            try {
+                const response = await apiRequest('Lớp học', 'Find', {}, {
+                    Properties: { Selector: `Filter(Lớp học, [IDLOP] = "${idlop}")` }
+                });
+                classInfo = Array.isArray(response) && response.length > 0 ? response[0] : {};
+                renderClassInfo();
+                return classInfo;
+            } catch (error) {
+                console.error("Lỗi khi tải thông tin lớp:", error);
+                classInfo = {};
+                return {};
+            }
+        };
+
+        // Fetch Teachers
+        // Cập nhật hàm fetchTeachers để dùng select thay vì datalist
+        const fetchTeachers = async () => {
+            try {
+                const response = await apiRequest('DSNV', 'Find', {}, {
+                    Properties: {}
+                });
+                console.log(response);
+                const teacherSelect = document.getElementById('editGiaoVienDay');
+                teacherSelect.innerHTML = '<option value="">Chọn giáo viên</option>';
+
+                if (Array.isArray(response)) {
+                    response.forEach(teacher => {
+                        if (teacher['Họ và Tên']) {
+                            console.log(teacher['Họ và Tên']);
+                            const option = document.createElement('option');
+                            option.value = teacher['Họ và Tên'];
+                            option.textContent = teacher['Họ và Tên'];
+                            teacherSelect.appendChild(option);
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error("Lỗi khi tải danh sách giáo viên:", error);
+            }
+        };
+
+        // Render Class Info
+        const renderClassInfo = () => {
+            const classInfoDiv = document.getElementById('classInfo');
+            if (Object.keys(classInfo).length > 0) {
+                classInfoDiv.innerHTML = `
+                    <div><strong>Tên lớp:</strong> ${classInfo['Tên lớp'] || 'N/A'}</div>
+                    <div><strong>Giáo trình:</strong> ${giaotrinh || 'N/A'}</div>
+                `;
+            } else {
+                classInfoDiv.innerHTML = '<p>Không có thông tin lớp.</p>';
+            }
+        };
+
+        // Render Pacing List
+        const renderPacingList = () => {
+            const pacingListBody = document.querySelector('#pacingListTable tbody');
+            pacingListBody.innerHTML = '';
+
+            if (pacingData.length === 0) {
+                const emptyRow = document.createElement('tr');
+                emptyRow.innerHTML = `<td colspan="10" class="border px-4 py-2 text-center">Không có dữ liệu pacing.</td>`;
+                pacingListBody.appendChild(emptyRow);
+                return;
+            }
+
+            pacingData.forEach(pacing => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="border px-4 py-2">${pacing['Buổi'] || ''}</td>
+                    <td class="border px-4 py-2">${pacing['Nội dung'] || ''}</td>
+                    <td class="border px-4 py-2">${pacing['Ngày đăng ký'] || ''}</td>
+                    <td class="border px-4 py-2">${pacing['Ngày thực tế học'] || ''}</td>
+                    <td class="border px-4 py-2">${pacing['Giáo viên dạy'] || ''}</td>
+                    <td class="border px-4 py-2">${pacing['Báo bài'] || ''}</td>
+                    <td class="border px-4 py-2">${pacing['Từ giờ đến'] || ''}</td>
+                    <td class="border px-4 py-2">${pacing['Đến giờ'] || ''}</td>
+                    <td class="border px-4 py-2">${pacing['Ghi chú'] || ''}</td>
+                    <td class="border px-4 py-2 text-center">
+                        <button class="edit-button bg-blue-500 text-white p-1 rounded hover:bg-blue-600" data-id="${pacing['IDPACINGLOPKG']}">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                    </td>
+                `;
+                pacingListBody.appendChild(row);
+            });
+
+            // Add event listeners to edit buttons
+            document.querySelectorAll('.edit-button').forEach(button => {
+                button.addEventListener('click', () => openEditModal(button.dataset.id));
+            });
+        };
+
+        // Open Edit Modal
+        // Sửa lại hàm openEditModal để cập nhật select box giáo viên và khoảng giờ
+        const openEditModal = (pacingId) => {
+            currentEditId = pacingId;
+            const pacing = pacingData.find(p => p['IDPACINGLOPKG'] === pacingId);
+            if (!pacing) return;
+
+            // Populate form fields
+            document.getElementById('editPacingId').value = pacing['IDPACINGLOPKG'];
+            document.getElementById('editBuoi').value = pacing['Buổi'] || '';
+            document.getElementById('editNoiDung').value = pacing['Nội dung'] || '';
+            document.getElementById('editNgayDangKy').value = pacing['Ngày đăng ký'] || '';
+            document.getElementById('editNgayThucTeHoc').value = pacing['Ngày thực tế học'] || '';
+
+            // Cập nhật giáo viên select box
+            const teacherSelect = document.getElementById('editGiaoVienDay');
+            const teacherValue = pacing['Giáo viên dạy'] || '';
+            for (let i = 0; i < teacherSelect.options.length; i++) {
+                if (teacherSelect.options[i].value === teacherValue) {
+                    teacherSelect.selectedIndex = i;
+                    break;
+                }
+            }
+
+            document.getElementById('editBaoBai').value = pacing['Báo bài'] || '';
+
+
+
+            document.getElementById('editGhiChu').value = pacing['Ghi chú'] || '';
+
+            // Show modal
+            document.getElementById('editModal').classList.add('active');
+        };
+
+        // Close Edit Modal
+        const closeEditModal = () => {
+            document.getElementById('editModal').classList.remove('active');
+            currentEditId = null;
+        };
+
+        // Save Pacing Item
+        const savePacingItem = async (event) => {
+            event.preventDefault();
+
+            if (!currentEditId) return;
+
+            const pacingIndex = pacingData.findIndex(p => p['IDPACINGLOPKG'] === currentEditId);
+            if (pacingIndex === -1) return;
+
+            // Update data
+            pacingData[pacingIndex]['Ngày thực tế học'] = document.getElementById('editNgayThucTeHoc').value;
+            pacingData[pacingIndex]['Giáo viên dạy'] = document.getElementById('editGiaoVienDay').value;
+            pacingData[pacingIndex]['Báo bài'] = document.getElementById('editBaoBai').value;
+            pacingData[pacingIndex]['Từ giờ đến'] = document.getElementById('editTuGioDen').value;
+            pacingData[pacingIndex]['Đến giờ'] = document.getElementById('editDenGio').value;
+            pacingData[pacingIndex]['Ghi chú'] = document.getElementById('editGhiChu').value;
+
+            try {
+                // Save single item
+                const updatedRow = {
+                    'IDPACINGLOPKG': currentEditId,
+                    'Ngày thực tế học': pacingData[pacingIndex]['Ngày thực tế học'],
+                    'Giáo viên dạy': pacingData[pacingIndex]['Giáo viên dạy'],
+                    'Báo bài': pacingData[pacingIndex]['Báo bài'],
+                    'Từ giờ đến': pacingData[pacingIndex]['Từ giờ đến'],
+                    'Đến giờ': pacingData[pacingIndex]['Đến giờ'],
+                    'Ghi chú': pacingData[pacingIndex]['Ghi chú']
+                };
+
+                const response = await apiRequest('PaccingLOP', 'Edit', { Rows: [updatedRow] }, { Properties: {} });
+
+                if (response >= 200 && response < 300) {
+                    closeEditModal();
+                    renderPacingList();
+                    FuiToast.success('Cập nhật thành công!', {
+                        isClose: true,
+                        autoClose: 3000
+                    });
+                } else {
+                    throw new Error('Lỗi khi cập nhật dữ liệu');
+                }
+            } catch (error) {
+                FuiToast.error(error.message, {
+                    isClose: true,
+                    autoClose: 5000
+                });
+            }
+        };
+
+        // Save All Pacing Data
+        const savePacingData = async () => {
+            try {
+                const updatedRows = pacingData.map(pacing => {
+                    return {
+                        'IDPACINGLOPKG': pacing['IDPACINGLOPKG'],
+                        'Ngày thực tế học': pacing['Ngày thực tế học'] || '',
+                        'Giáo viên dạy': pacing['Giáo viên dạy'] || '',
+                        'Báo bài': pacing['Báo bài'] || '',
+                        'Từ giờ đến': pacing['Từ giờ đến'] || '',
+                        'Đến giờ': pacing['Đến giờ'] || '',
+                        'Ghi chú': pacing['Ghi chú'] || ''
+                    };
+                });
+
+                const response = await apiRequest('PaccingLOP', 'Edit', { Rows: updatedRows }, { Properties: {} });
+
+                if (response >= 200 && response < 300) {
+                    FuiToast.success('Dữ liệu đã được lưu thành công!', {
+                        isClose: true,
+                        autoClose: 3000
+                    });
+                    await fetchPacingData();
+                    renderPacingList();
+                } else {
+                    throw new Error('Có lỗi xảy ra khi lưu dữ liệu pacing');
+                }
+            } catch (error) {
+                FuiToast.error(error.message, {
+                    isClose: true,
+                    autoClose: 5000
+                });
+            }
+        };
+
+        // Initialize App
+        const initializeApp = async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            idlop = urlParams.get('idlop');
+            giaotrinh = urlParams.get('giaotrinh');
+
+            if (!idlop || !giaotrinh) {
+                FuiToast.error('Thiếu thông tin IDLOP hoặc Giáo trình trong URL', {
+                    isClose: true,
+                    autoClose: 5000
+                });
+                return;
+            }
+
+            return FuiToast.promise(
+                Promise.all([fetchPacingData(), fetchClassInfo(), fetchTeachers()]).then(() => {
+                    renderPacingList();
+                }),
+                {
+                    loading: 'Đang tải dữ liệu...',
+                    success: 'Dữ liệu đã được tải thành công!',
+                    error: 'Có lỗi xảy ra khi tải dữ liệu',
+                },
+                { isClose: true }
+            );
+        };
+
+        // Event Listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeApp();
+
+            // Modal event listeners
+            document.getElementById('closeModal').addEventListener('click', closeEditModal);
+            document.getElementById('cancelButton').addEventListener('click', closeEditModal);
+            document.getElementById('editForm').addEventListener('submit', savePacingItem);
+
+            // Button event listeners
+            document.getElementById('refreshButton').addEventListener('click', initializeApp);
+            document.getElementById('syncButton').addEventListener('click', savePacingData);
+        });
+    </script>
+</body>
+
+</html>
