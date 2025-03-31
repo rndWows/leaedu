@@ -251,7 +251,7 @@
         const fetchPacingData = async () => {
             try {
                 const response = await apiRequest('PaccingLOP', 'Find', {}, {
-                    Properties: { Selector: `Filter(PaccingLOP, and([IDLOP] = "${idlop}", [Giáo trình] = "${giaotrinh}"))` }
+                    Properties: { Selector: `Filter(PaccingLOP, and([IDLOP] = "${idlop}", [ID pacing guide] = "${giaotrinh}"))` }
                 });
                 pacingData = Array.isArray(response) ? response : [];
                 return pacingData;
