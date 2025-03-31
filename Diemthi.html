@@ -136,6 +136,8 @@
             let idlichthi = '';
             let studentsData = [];
             let thongtinlichthi = [];
+            let diemThiData = [];
+
             async function apiRequest(tableName, action, data, Properties) {
                 const apiUrl = `https://www.appsheet.com/api/v2/apps/${appId}/tables/${tableName}/Action`;
                 try {
@@ -164,7 +166,37 @@
             const modal = document.getElementById('scoreModal');
             const scoreInfoButton = document.getElementById('scoreInfoButton');
             const closeModal = document.getElementById('closeModal');
+            const fetchDiemThi = async () => {
+                try {
+                    const response = await apiRequest('DIEMTHI', 'Find', {}, {
+                        Properties: { Selector: `Filter(DIEMTHI, [IDLOP] = "${idlop}" AND [IDLICHTHI] = "${idlichthi}")` }
+                    });
+                    diemThiData = Array.isArray(response) ? response : [];
+                    return diemThiData;
+                } catch (error) {
+                    console.error("Lỗi khi tải dữ liệu điểm thi:", error);
+                    diemThiData = [];
+                    return [];
+                }
+            };
 
+            // Hàm điền dữ liệu điểm thi vào form
+            const fillDiemThiData = () => {
+                if (diemThiData.length > 0) {
+                    studentsData.forEach((student, index) => {
+                        const diemThi = diemThiData.find(d => d.KEY === student.IDKH);
+                        if (diemThi) {
+                            student['QUÁ TRÌNH (10%)'] = diemThi['QUÁ TRÌNH (10%)'] || student['QUÁ TRÌNH (10%)'] || '';
+                            student['S-A'] = diemThi['S-A'] || student['S-A'] || '';
+                            student['L-A'] = diemThi['L-A'] || student['L-A'] || '';
+                            student['RW-A'] = diemThi['RW-A'] || student['RW-A'] || '';
+                            student['Điểm'] = diemThi['Điểm'] || student['Điểm'] || '';
+                            student['Xếp loại'] = diemThi['Xếp loại'] || student['Xếp loại'] || '';
+                            student['Nhận xét giáo viên'] = diemThi['Nhận xét giáo viên'] || student['Nhận xét giáo viên'] || '';
+                        }
+                    });
+                }
+            };
             scoreInfoButton.addEventListener('click', () => {
                 modal.classList.remove('hidden');
             });
@@ -290,8 +322,12 @@
                 const urlParams = new URLSearchParams(window.location.search);
                 idlop = urlParams.get('idlop');
                 idlichthi = urlParams.get('idlichthi');
+
                 return FuiToast.promise(
-                    Promise.all([fetchStudents(), thongtinlop()]),
+                    Promise.all([fetchStudents(), thongtinlop(), fetchDiemThi()]).then(() => {
+                        fillDiemThiData();
+                        renderStudentList();
+                    }),
                     {
                         loading: 'Đang tải dữ liệu...',
                         success: 'Dữ liệu đã được tải thành công!',
@@ -300,11 +336,28 @@
                     { isClose: true }
                 );
             };
+
             const saveExamScores = async () => {
                 try {
+                    // Kiểm tra chi tiết dữ liệu
+                    const missingDataStudents = studentsData.filter(student =>
+                        !student['QUÁ TRÌNH (10%)'] ||
+                        !student['S-A'] ||
+                        !student['L-A'] ||
+                        !student['RW-A']
+                    );
+
+                    if (missingDataStudents.length > 0) {
+                        // Lấy tên của tối đa 3 học viên đầu tiên thiếu dữ liệu
+                        const studentNames = missingDataStudents.slice(0, 3).map(s => s['Tên KH']).join(', ');
+                        const remainingCount = missingDataStudents.length > 3 ? ` và ${missingDataStudents.length - 3} học viên khác` : '';
+                        throw new Error(`Thiếu điểm của: ${studentNames}${remainingCount}. Vui lòng nhập đầy đủ.`);
+                    }
+
+                    // Tiếp tục xử lý khi dữ liệu đầy đủ
                     const updatedData = studentsData.map(student => {
                         if (!student['IDKH']) {
-                            throw new Error(`Missing IDKH for student: ${student['Tên KH']}`);
+                            throw new Error(`Thiếu IDKH của học viên: ${student['Tên KH']}`);
                         }
                         return {
                             'IDLICHTHI': idlichthi,
@@ -319,30 +372,49 @@
                             'Nhận xét giáo viên': student['Nhận xét giáo viên'] || ''
                         };
                     });
+
                     const response = await apiRequest('DIEMTHI', 'Add', { Rows: updatedData }, { Properties: {} });
-                    FuiToast.success('Điểm thi đã được lưu thành công!', {
-                        isClose: true,
-                        autoClose: 3000
-                    });
+                    if (response == 200) {
+                        FuiToast.success('Điểm thi đã được lưu thành công!', {
+                            isClose: true,
+                            autoClose: 5000
+                        });
+                    } else {
+                        throw new Error('Có lỗi xảy ra khi lưu điểm thi. Vui lòng thử lại.');
+                    }
+
                 } catch (error) {
-                    FuiToast.error(`Có lỗi xảy ra khi lưu điểm thi: ${error.message}. Vui lòng thử lại.`, {
+                    FuiToast.error(`${error.message}`, {
                         isClose: true,
                         autoClose: 5000
                     });
                 }
             };
+            // Thêm vào cuối hàm renderStudentList
+            const highlightEmptyFields = () => {
+                document.querySelectorAll('#studentListTable input').forEach(input => {
+                    if (!input.value) {
+                        input.classList.add('border-red-500', 'bg-red-50');
+                    } else {
+                        input.classList.remove('border-red-500', 'bg-red-50');
+                    }
+                });
+            };
+
+            // Gọi hàm này sau khi render và khi input thay đổi
+            document.querySelectorAll('#studentListTable input').forEach(input => {
+                input.addEventListener('input', () => {
+                    updateStudentScore(input);
+                    highlightEmptyFields();
+                });
+            });
+            highlightEmptyFields();
             document.addEventListener('DOMContentLoaded', initializeApp);
             document.getElementById('refreshButton').addEventListener('click', initializeApp);
             document.getElementById('syncButton').addEventListener('click', () => {
-                FuiToast.promise(
-                    saveExamScores(),
-                    {
-                        loading: 'Đang lưu điểm thi...',
-                        success: 'Điểm thi đã được lưu thành công!',
-                        error: 'Có lỗi xảy ra khi lưu điểm thi. Vui lòng thử lại.',
-                    },
-                    { isClose: true }
-                );
+             
+                    saveExamScores()
+                 
             });
         </script>
 </body>
