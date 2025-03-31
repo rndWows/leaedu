@@ -153,15 +153,37 @@
                             ...data
                         })
                     });
+
                     if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response[0].status}`);
+                        throw new Error(`HTTP error! status: ${response.status}`);
                     }
-                    return await response.json();
+
+                    // Xử lý response theo action
+                    if (action === 'Edit') {
+                        // Với action Edit, trả về status để xác nhận thành công
+                        return response.status;
+                    }
+                    if (action === 'Add') {
+                        // Với action Add, trả về status để xác nhận thành công
+                        return response.status;
+                    }
+
+                    // Kiểm tra có dữ liệu JSON không
+                    const text = await response.text();
+                    if (!text) return response.status;
+
+                    try {
+                        return JSON.parse(text);
+                    } catch (e) {
+                        console.warn('Response không phải JSON hợp lệ:', text);
+                        return response.status;
+                    }
                 } catch (error) {
                     console.error("API Error:", error);
                     throw error;
                 }
             }
+
             // Modal handling
             const modal = document.getElementById('scoreModal');
             const scoreInfoButton = document.getElementById('scoreInfoButton');
@@ -374,13 +396,14 @@
                     });
 
                     const response = await apiRequest('DIEMTHI', 'Add', { Rows: updatedData }, { Properties: {} });
-                    if (response == 200) {
-                        FuiToast.success('Điểm thi đã được lưu thành công!', {
+                    console.log('Response:', Array.isArray(response) ? response : []);
+                    if (response >= 200 && response < 300) {
+                        FuiToast.success('Cập nhật thành công!', {
                             isClose: true,
-                            autoClose: 5000
+                            autoClose: 3000
                         });
                     } else {
-                        throw new Error('Có lỗi xảy ra khi lưu điểm thi. Vui lòng thử lại.');
+                        throw new Error('Lỗi khi cập nhật dữ liệu');
                     }
 
                 } catch (error) {
@@ -412,9 +435,9 @@
             document.addEventListener('DOMContentLoaded', initializeApp);
             document.getElementById('refreshButton').addEventListener('click', initializeApp);
             document.getElementById('syncButton').addEventListener('click', () => {
-             
-                    saveExamScores()
-                 
+
+                saveExamScores()
+
             });
         </script>
 </body>
