@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form Nhập Điểm IELTS</title>
+    <link rel="shortcut icon"
+        href="https://lea.edu.vn/wp-content/uploads/2023/07/removal.ai_9476a724-4e89-400f-a9e4-e6f4d9c4503d-logo-vector-1.png"
+        type="image/x-icon">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/gh/lelinh014756/fui-toast-js@master/assets/css/toast@1.0.1/fuiToast.min.css">
+    <script
+        src="https://cdn.jsdelivr.net/gh/lelinh014756/fui-toast-js@master/assets/js/toast@1.0.1/fuiToast.min.js"></script>
+    <style>
+        .sticky-header {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background-color: white;
+        }
+
+        .invalid-input {
+            border-color: #f56565;
+            background-color: #fff5f5;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 font-sans">
+    <div id="fui-toast"></div>
+    <div class="container mx-auto px-4 py-6">
+        <header class="sticky-header bg-white shadow rounded-lg p-4 mb-6">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="flex items-center">
+                    <img src="https://lea.edu.vn/wp-content/uploads/2023/07/removal.ai_9476a724-4e89-400f-a9e4-e6f4d9c4503d-logo-vector-1.png"
+                        width="80" alt="LEA EDU Logo">
+                    <h1 class="text-2xl font-bold text-blue-700 ml-4">Form Nhập Điểm IELTS</h1>
+                </div>
+                <div class="flex space-x-2 mt-4 md:mt-0">
+                    <button id="refreshButton"
+                        class="py-2 px-4 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-300">
+                        <i class="fas fa-sync-alt mr-2"></i>Làm mới
+                    </button>
+                    <button id="saveButton"
+                        class="py-2 px-4 bg-green-500 text-white rounded hover:bg-green-600 transition duration-300">
+                        <i class="fas fa-save mr-2"></i>Lưu điểm
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <div class="bg-white rounded-lg shadow-md p-4 mb-6">
+            <h2 class="text-xl font-semibold text-blue-600 mb-3">Thông tin lớp học</h2>
+            <div id="classInfo" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div><strong>Lớp:</strong> <span id="className">Đang tải...</span></div>
+                <div><strong>Giáo viên nhận xét:</strong> <input type="text" id="teacherName"
+                        class="border px-2 py-1 rounded w-64"></div>
+                <!-- Thay thế dòng hiển thị ngày hiện tại -->
+                <div><strong>Ngày nhập điểm:</strong> <input type="date" id="entryDate"
+                        class="border px-2 py-1 rounded"></div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-4 mb-6">
+            <h2 class="text-xl font-semibold text-blue-600 mb-3">Danh sách học viên</h2>
+            <div class="overflow-x-auto">
+                <table id="studentTable" class="min-w-full bg-white border">
+                    <thead>
+                        <tr class="bg-gray-100">
+                            <th class="px-2 py-2 border">Tên học viên</th>
+                            <th class="px-2 py-2 border">Listening (0-40)</th>
+                            <th class="px-2 py-2 border">Reading (0-40)</th>
+                            <th class="px-2 py-2 border">Speaking</th>
+                            <th class="px-2 py-2 border">Writing</th>
+                            <th class="px-2 py-2 border">Điểm tổng</th>
+                            <th class="px-2 py-2 border">Nhận xét</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Dữ liệu sẽ được thêm vào đây -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Speaking -->
+    <div id="speakingModal"
+        class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold">Chi tiết điểm Speaking</h3>
+                <button class="closeModal text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <input type="hidden" id="current-student-id">
+            <div class="space-y-4">
+                <div>
+                    <label class="block font-medium text-gray-700 mb-1">Fluency (FL):</label>
+                    <select id="s-fl"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">Chọn điểm</option>
+                        <option value="0">0</option>
+                        <option value="0.5">0.5</option>
+                        <option value="1">1.0</option>
+                        <option value="1.5">1.5</option>
+                        <option value="2">2.0</option>
+                        <option value="2.5">2.5</option>
+                        <option value="3">3.0</option>
+                        <option value="3.5">3.5</option>
+                        <option value="4">4.0</option>
+                        <option value="4.5">4.5</option>
+                        <option value="5">5.0</option>
+                        <option value="5.5">5.5</option>
+                        <option value="6">6.0</option>
+                        <option value="6.5">6.5</option>
+                        <option value="7">7.0</option>
+                        <option value="7.5">7.5</option>
+                        <option value="8">8.0</option>
+                        <option value="8.5">8.5</option>
+                        <option value="9">9.0</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block font-medium text-gray-700 mb-1">Lexical (LR):</label>
+                    <select id="s-lr"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">Chọn điểm</option>
+                        <option value="0">0</option>
+                        <option value="0.5">0.5</option>
+                        <option value="1">1.0</option>
+                        <option value="1.5">1.5</option>
+                        <option value="2">2.0</option>
+                        <option value="2.5">2.5</option>
+                        <option value="3">3.0</option>
+                        <option value="3.5">3.5</option>
+                        <option value="4">4.0</option>
+                        <option value="4.5">4.5</option>
+                        <option value="5">5.0</option>
+                        <option value="5.5">5.5</option>
+                        <option value="6">6.0</option>
+                        <option value="6.5">6.5</option>
+                        <option value="7">7.0</option>
+                        <option value="7.5">7.5</option>
+                        <option value="8">8.0</option>
+                        <option value="8.5">8.5</option>
+                        <option value="9">9.0</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block font-medium text-gray-700 mb-1">Grammar (GA):</label>
+                    <select id="s-ga"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">Chọn điểm</option>
+                        <option value="0">0</option>
+                        <option value="0.5">0.5</option>
+                        <option value="1">1.0</option>
+                        <option value="1.5">1.5</option>
+                        <option value="2">2.0</option>
+                        <option value="2.5">2.5</option>
+                        <option value="3">3.0</option>
+                        <option value="3.5">3.5</option>
+                        <option value="4">4.0</option>
+                        <option value="4.5">4.5</option>
+                        <option value="5">5.0</option>
+                        <option value="5.5">5.5</option>
+                        <option value="6">6.0</option>
+                        <option value="6.5">6.5</option>
+                        <option value="7">7.0</option>
+                        <option value="7.5">7.5</option>
+                        <option value="8">8.0</option>
+                        <option value="8.5">8.5</option>
+                        <option value="9">9.0</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block font-medium text-gray-700 mb-1">Pronunciation (PR):</label>
+                    <select id="s-pr"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">Chọn điểm</option>
+                        <option value="0">0</option>
+                        <option value="0.5">0.5</option>
+                        <option value="1">1.0</option>
+                        <option value="1.5">1.5</option>
+                        <option value="2">2.0</option>
+                        <option value="2.5">2.5</option>
+                        <option value="3">3.0</option>
+                        <option value="3.5">3.5</option>
+                        <option value="4">4.0</option>
+                        <option value="4.5">4.5</option>
+                        <option value="5">5.0</option>
+                        <option value="5.5">5.5</option>
+                        <option value="6">6.0</option>
+                        <option value="6.5">6.5</option>
+                        <option value="7">7.0</option>
+                        <option value="7.5">7.5</option>
+                        <option value="8">8.0</option>
+                        <option value="8.5">8.5</option>
+                        <option value="9">9.0</option>
+                    </select>
+                </div>
+                <div class="pt-2">
+                    <div class="text-lg font-semibold">Điểm Speaking: <span id="speaking-result">0.0</span></div>
+                </div>
+                <div class="pt-2 flex justify-end">
+                    <button id="saveSpeakingBtn"
+                        class="py-2 px-4 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-300">
+                        Lưu điểm
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Writing -->
+    <div id="writingModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold">Chi tiết điểm Writing</h3>
+                <button class="closeModal text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <input type="hidden" id="current-student-id-writing">
+            <div class="space-y-4">
+                <div>
+                    <label class="block font-medium text-gray-700 mb-1">Task Achievement (TA):</label>
+                    <select id="w-ta"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">Chọn điểm</option>
+                        <option value="0">0</option>
+                        <option value="0.5">0.5</option>
+                        <option value="1">1.0</option>
+                        <option value="1.5">1.5</option>
+                        <option value="2">2.0</option>
+                        <option value="2.5">2.5</option>
+                        <option value="3">3.0</option>
+                        <option value="3.5">3.5</option>
+                        <option value="4">4.0</option>
+                        <option value="4.5">4.5</option>
+                        <option value="5">5.0</option>
+                        <option value="5.5">5.5</option>
+                        <option value="6">6.0</option>
+                        <option value="6.5">6.5</option>
+                        <option value="7">7.0</option>
+                        <option value="7.5">7.5</option>
+                        <option value="8">8.0</option>
+                        <option value="8.5">8.5</option>
+                        <option value="9">9.0</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block font-medium text-gray-700 mb-1">Lexical Resource (LR):</label>
+                    <select id="w-lr"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">Chọn điểm</option>
+                        <option value="0">0</option>
+                        <option value="0.5">0.5</option>
+                        <option value="1">1.0</option>
+                        <option value="1.5">1.5</option>
+                        <option value="2">2.0</option>
+                        <option value="2.5">2.5</option>
+                        <option value="3">3.0</option>
+                        <option value="3.5">3.5</option>
+                        <option value="4">4.0</option>
+                        <option value="4.5">4.5</option>
+                        <option value="5">5.0</option>
+                        <option value="5.5">5.5</option>
+                        <option value="6">6.0</option>
+                        <option value="6.5">6.5</option>
+                        <option value="7">7.0</option>
+                        <option value="7.5">7.5</option>
+                        <option value="8">8.0</option>
+                        <option value="8.5">8.5</option>
+                        <option value="9">9.0</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block font-medium text-gray-700 mb-1">Grammar Accuracy (GA):</label>
+                    <select id="w-ga"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">Chọn điểm</option>
+                        <option value="0">0</option>
+                        <option value="0.5">0.5</option>
+                        <option value="1">1.0</option>
+                        <option value="1.5">1.5</option>
+                        <option value="2">2.0</option>
+                        <option value="2.5">2.5</option>
+                        <option value="3">3.0</option>
+                        <option value="3.5">3.5</option>
+                        <option value="4">4.0</option>
+                        <option value="4.5">4.5</option>
+                        <option value="5">5.0</option>
+                        <option value="5.5">5.5</option>
+                        <option value="6">6.0</option>
+                        <option value="6.5">6.5</option>
+                        <option value="7">7.0</option>
+                        <option value="7.5">7.5</option>
+                        <option value="8">8.0</option>
+                        <option value="8.5">8.5</option>
+                        <option value="9">9.0</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block font-medium text-gray-700 mb-1">Coherence/Cohesion (CC):</label>
+                    <select id="w-cc"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">Chọn điểm</option>
+                        <option value="0">0</option>
+                        <option value="0.5">0.5</option>
+                        <option value="1">1.0</option>
+                        <option value="1.5">1.5</option>
+                        <option value="2">2.0</option>
+                        <option value="2.5">2.5</option>
+                        <option value="3">3.0</option>
+                        <option value="3.5">3.5</option>
+                        <option value="4">4.0</option>
+                        <option value="4.5">4.5</option>
+                        <option value="5">5.0</option>
+                        <option value="5.5">5.5</option>
+                        <option value="6">6.0</option>
+                        <option value="6.5">6.5</option>
+                        <option value="7">7.0</option>
+                        <option value="7.5">7.5</option>
+                        <option value="8">8.0</option>
+                        <option value="8.5">8.5</option>
+                        <option value="9">9.0</option>
+                    </select>
+                </div>
+                <div class="pt-2">
+                    <div class="text-lg font-semibold">Điểm Writing: <span id="writing-result">0.0</span></div>
+                </div>
+                <div class="pt-2 flex justify-end">
+                    <button id="saveWritingBtn"
+                        class="py-2 px-4 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-300">
+                        Lưu điểm
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Cấu hình API
+        const appId = '237238ed-4230-4db1-ab50-e492cea9cdba';
+        const accessKey = 'V2-GAZkd-YsAqg-LBYbc-LRoOQ-2ZFzj-Imfj1-SodbW-9RtwD';
+        let idlop = '';
+        let studentsData = [];
+        let ieltsData = [];
+
+        // Hàm gọi API
+        async function apiRequest(tableName, action, data, Properties) {
+            const apiUrl = `https://www.appsheet.com/api/v2/apps/${appId}/tables/${tableName}/Action`;
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'ApplicationAccessKey': accessKey,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        Action: action,
+                        ...Properties,
+                        ...data
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                if (action === 'Edit' || action === 'Add') {
+                    return response.status;
+                }
+
+                const text = await response.text();
+                if (!text) return response.status;
+
+                try {
+                    return JSON.parse(text);
+                } catch (e) {
+                    console.warn('Response không phải JSON hợp lệ:', text);
+                    return response.status;
+                }
+            } catch (error) {
+                console.error("API Error:", error);
+                throw error;
+            }
+        }
+
+        // Lấy dữ liệu học viên
+        async function fetchStudents(a) {
+            try {
+                const response = await apiRequest('Danh sách học viên', 'Find', {}, {
+                    Properties: { Selector: `Filter(Danh sách học viên, [IDKH] = "${a}")` }
+                });
+                studentsData = Array.isArray(response) ? response : [];
+                return studentsData;
+            } catch (error) {
+                console.error("Lỗi khi tải danh sách học viên:", error);
+                studentsData = [];
+                return [];
+            }
+        }
+
+        // Lấy dữ liệu điểm IELTS
+        async function fetchIELTSData(a) {
+            try {
+                const response = await apiRequest('IELTS', 'Find', {}, {
+                    Properties: { Selector: `Filter(IELTS, [IDKH] = "${a}")` }
+                });
+                ieltsData = Array.isArray(response) ? response : [];
+                return ieltsData;
+            } catch (error) {
+                console.error("Lỗi khi tải dữ liệu IELTS:", error);
+                ieltsData = [];
+                return [];
+            }
+        }
+
+        // Hiển thị dữ liệu học viên và điểm
+        function renderStudentTable() {
+            const tableBody = document.querySelector('#studentTable tbody');
+            tableBody.innerHTML = '';
+
+            if (studentsData.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="7" class="text-center py-4">Không có dữ liệu học viên</td></tr>`;
+                return;
+            }
+
+            studentsData.forEach(student => {
+                // Tìm điểm IELTS đã lưu (nếu có)
+                const ielts = ieltsData.find(item => item.KEY === student.IDKH);
+
+                const row = document.createElement('tr');
+                row.dataset.idkh = student.IDKH;
+                row.innerHTML = `
+                    <td class="border px-2 py-2">${student['Tên KH'] || ''}</td>
+                     <td class="border px-2 py-2">
+        <input type="number" class="w-full px-2 py-1 border rounded" data-field="listening" min="0" max="40" value="${ielts?.listening || ''}" placeholder="0-40">
+        ${ielts?.listening ? `<div class="listening-band text-xs text-gray-700 mt-1">Band: ${convertListeningToBand(parseFloat(ielts.listening)).toFixed(1)}</div>` : ''}
+    </td>
+    <td class="border px-2 py-2">
+        <input type="number" class="w-full px-2 py-1 border rounded" data-field="reading" min="0" max="40" value="${ielts?.reading || ''}" placeholder="0-40">
+        ${ielts?.reading ? `<div class="reading-band text-xs text-gray-700 mt-1">Band: ${convertReadingToBand(parseFloat(ielts.reading)).toFixed(1)}</div>` : ''}
+    </td>
+                    <td class="border px-2 py-2">
+                        <div class="flex items-center">
+                            <input type="number" class="w-16 px-2 py-1 border rounded" data-field="speaking" min="0" max="9" step="0.5" value="${ielts?.speaking || ''}" disabled>
+                            <button class="speakingBtn ml-2 px-2 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200">
+                                <i class="fas fa-pencil-alt"></i>
+                            </button>
+                        </div>
+                        <div class="text-xs text-gray-500 mt-1">
+                            FL: ${ielts?.s_fl || '-'}, LR: ${ielts?.s_lr || '-'}, 
+                            GA: ${ielts?.s_ga || '-'}, PR: ${ielts?.s_pr || '-'}
+                        </div>
+                    </td>
+                    <td class="border px-2 py-2">
+                        <div class="flex items-center">
+                            <input type="number" class="w-16 px-2 py-1 border rounded" data-field="writing" min="0" max="9" step="0.5" value="${ielts?.writing || ''}" disabled>
+                            <button class="writingBtn ml-2 px-2 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200">
+                                <i class="fas fa-pencil-alt"></i>
+                            </button>
+                        </div>
+                        <div class="text-xs text-gray-500 mt-1">
+                            TA: ${ielts?.w_ta || '-'}, LR: ${ielts?.w_lr || '-'}, 
+                            GA: ${ielts?.w_ga || '-'}, CC: ${ielts?.w_cc || '-'}
+                        </div>
+                    </td>
+                    <td class="border px-2 py-2">
+                        <span class="total-score font-semibold">${ielts?.total || '0.0'}</span>
+                    </td>
+                    <td class="border px-2 py-2">
+                        <textarea class="w-full px-2 py-1 border rounded resize-y" data-field="comment" rows="2">${ielts?.comment || ''}</textarea>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+
+            // Thêm event listener cho input
+            document.querySelectorAll('#studentTable input[data-field="listening"], #studentTable input[data-field="reading"]').forEach(input => {
+                input.addEventListener('input', updateScore);
+            });
+
+            // Thêm event listener cho nút speaking và writing
+            document.querySelectorAll('.speakingBtn').forEach(btn => {
+                btn.addEventListener('click', openSpeakingModal);
+            });
+
+            document.querySelectorAll('.writingBtn').forEach(btn => {
+                btn.addEventListener('click', openWritingModal);
+            });
+        }
+
+        // Mở modal Speaking
+        function openSpeakingModal(event) {
+            const row = event.currentTarget.closest('tr');
+            const idkh = row.dataset.idkh;
+            document.getElementById('current-student-id').value = idkh;
+
+            // Tìm dữ liệu IELTS của học viên
+            const ielts = ieltsData.find(item => item.KEY === idkh);
+
+            // Điền dữ liệu vào form modal
+            document.getElementById('s-fl').value = ielts?.s_fl || '';
+            document.getElementById('s-lr').value = ielts?.s_lr || '';
+            document.getElementById('s-ga').value = ielts?.s_ga || '';
+            document.getElementById('s-pr').value = ielts?.s_pr || '';
+
+            // Hiển thị điểm
+            calculateSpeakingScore();
+
+            // Hiển thị modal
+            document.getElementById('speakingModal').classList.remove('hidden');
+        }
+
+        // Mở modal Writing
+        function openWritingModal(event) {
+            const row = event.currentTarget.closest('tr');
+            const idkh = row.dataset.idkh;
+            document.getElementById('current-student-id-writing').value = idkh;
+
+            // Tìm dữ liệu IELTS của học viên
+            const ielts = ieltsData.find(item => item.KEY === idkh);
+
+            // Điền dữ liệu vào form modal
+            document.getElementById('w-ta').value = ielts?.w_ta || '';
+            document.getElementById('w-lr').value = ielts?.w_lr || '';
+            document.getElementById('w-ga').value = ielts?.w_ga || '';
+            document.getElementById('w-cc').value = ielts?.w_cc || '';
+
+            // Hiển thị điểm
+            calculateWritingScore();
+
+            // Hiển thị modal
+            document.getElementById('writingModal').classList.remove('hidden');
+        }
+
+        // Tính điểm Speaking
+        function calculateSpeakingScore() {
+            const sFl = parseFloat(document.getElementById('s-fl').value) || 0;
+            const sLr = parseFloat(document.getElementById('s-lr').value) || 0;
+            const sGa = parseFloat(document.getElementById('s-ga').value) || 0;
+            const sPr = parseFloat(document.getElementById('s-pr').value) || 0;
+
+            const speakingScore = (sFl + sLr + sGa + sPr) / 4;
+            // Làm tròn đến 0.0 hoặc 0.5
+            const roundedSpeaking = Math.round(speakingScore * 2) / 2;
+
+            document.getElementById('speaking-result').textContent = roundedSpeaking.toFixed(1);
+            return roundedSpeaking;
+        }
+
+        // Tính điểm Writing
+        function calculateWritingScore() {
+            const wTa = parseFloat(document.getElementById('w-ta').value) || 0;
+            const wLr = parseFloat(document.getElementById('w-lr').value) || 0;
+            const wGa = parseFloat(document.getElementById('w-ga').value) || 0;
+            const wCc = parseFloat(document.getElementById('w-cc').value) || 0;
+
+            const writingScore = (wTa + wLr + wGa + wCc) / 4;
+            // Làm tròn đến 0.0 hoặc 0.5
+            const roundedWriting = Math.round(writingScore * 2) / 2;
+
+            document.getElementById('writing-result').textContent = roundedWriting.toFixed(1);
+            return roundedWriting;
+        }
+
+        // Lưu điểm Speaking
+        function saveSpeakingScore() {
+            const idkh = document.getElementById('current-student-id').value;
+            const sFl = parseFloat(document.getElementById('s-fl').value) || 0;
+            const sLr = parseFloat(document.getElementById('s-lr').value) || 0;
+            const sGa = parseFloat(document.getElementById('s-ga').value) || 0;
+            const sPr = parseFloat(document.getElementById('s-pr').value) || 0;
+
+            const speakingScore = calculateSpeakingScore();
+
+            // Tìm dòng học viên
+            const row = document.querySelector(`tr[data-idkh="${idkh}"]`);
+            if (row) {
+                // Cập nhật giá trị
+                row.querySelector('input[data-field="speaking"]').value = speakingScore.toFixed(1);
+                row.querySelector('td:nth-child(4) .text-xs').innerHTML =
+                    `FL: ${sFl}, LR: ${sLr}, GA: ${sGa}, PR: ${sPr}`;
+
+                // Cập nhật điểm tổng
+                updateTotalScore(row);
+            }
+
+            // Đóng modal
+            document.getElementById('speakingModal').classList.add('hidden');
+        }
+
+        // Lưu điểm Writing
+        function saveWritingScore() {
+            const idkh = document.getElementById('current-student-id-writing').value;
+            const wTa = parseFloat(document.getElementById('w-ta').value) || 0;
+            const wLr = parseFloat(document.getElementById('w-lr').value) || 0;
+            const wGa = parseFloat(document.getElementById('w-ga').value) || 0;
+            const wCc = parseFloat(document.getElementById('w-cc').value) || 0;
+
+            const writingScore = calculateWritingScore();
+
+            // Tìm dòng học viên
+            const row = document.querySelector(`tr[data-idkh="${idkh}"]`);
+            if (row) {
+                // Cập nhật giá trị
+                row.querySelector('input[data-field="writing"]').value = writingScore.toFixed(1);
+                row.querySelector('td:nth-child(5) .text-xs').innerHTML =
+                    `TA: ${wTa}, LR: ${wLr}, GA: ${wGa}, CC: ${wCc}`;
+
+                // Cập nhật điểm tổng
+                updateTotalScore(row);
+            }
+
+            // Đóng modal
+            document.getElementById('writingModal').classList.add('hidden');
+        }
+
+        // Cập nhật điểm tổng
+        function updateScore(event) {
+            const row = event.target.closest('tr');
+            if (row) {
+                updateTotalScore(row);
+            }
+        }
+
+        // Tính và cập nhật điểm tổng
+        function updateTotalScore(row) {
+            const listening = parseFloat(row.querySelector('[data-field="listening"]').value) || 0;
+            const reading = parseFloat(row.querySelector('[data-field="reading"]').value) || 0;
+            const speaking = parseFloat(row.querySelector('[data-field="speaking"]').value) || 0;
+            const writing = parseFloat(row.querySelector('[data-field="writing"]').value) || 0;
+
+            // Chuyển đổi điểm
+            const listeningBand = convertListeningToBand(listening);
+            const readingBand = convertReadingToBand(reading);
+
+            // Tính điểm tổng
+            const totalScore = (listeningBand + readingBand + speaking + writing) / 4;
+            const roundedScore = Math.round(totalScore * 2) / 2;
+
+            row.querySelector('.total-score').textContent = roundedScore.toFixed(1);
+        }
+
+        // Chuyển đổi điểm Listening sang Band
+        function convertListeningToBand(score) {
+            if (score >= 39) return 9.0;
+            if (score >= 37) return 8.5;
+            if (score >= 35) return 8.0;
+            if (score >= 32) return 7.5;
+            if (score >= 30) return 7.0;
+            if (score >= 26) return 6.5;
+            if (score >= 23) return 6.0;
+            if (score >= 18) return 5.5;
+            if (score >= 16) return 5.0;
+            if (score >= 13) return 4.5;
+            if (score >= 10) return 4.0;
+            if (score >= 8) return 3.5;
+            if (score >= 6) return 3.0;
+            if (score >= 4) return 2.5;
+            if (score >= 2) return 2.0;
+            if (score >= 1) return 1.5;
+            return 1.0;
+        }
+
+        // Chuyển đổi điểm Reading sang Band
+        function convertReadingToBand(score) {
+            if (score >= 39) return 9.0;
+            if (score >= 37) return 8.5;
+            if (score >= 35) return 8.0;
+            if (score >= 33) return 7.5;
+            if (score >= 30) return 7.0;
+            if (score >= 27) return 6.5;
+            if (score >= 23) return 6.0;
+            if (score >= 19) return 5.5;
+            if (score >= 15) return 5.0;
+            if (score >= 13) return 4.5;
+            if (score >= 10) return 4.0;
+            if (score >= 8) return 3.5;
+            if (score >= 6) return 3.0;
+            if (score >= 4) return 2.5;
+            if (score >= 2) return 2.0;
+            if (score >= 1) return 1.5;
+            return 1.0;
+        }
+
+        // Kiểm tra dữ liệu hợp lệ
+        function validateData() {
+            let valid = true;
+
+            // Kiểm tra giáo viên đã nhập chưa
+            if (!document.getElementById('teacherName').value) {
+                document.getElementById('teacherName').classList.add('invalid-input');
+                FuiToast.error('Vui lòng nhập tên giáo viên nhận xét', {
+                    isClose: true,
+                    autoClose: 3000
+                });
+                return false;
+            }
+
+            // Kiểm tra giá trị Listening và Reading
+            const invalidInputs = [];
+
+            document.querySelectorAll('#studentTable tr[data-idkh]').forEach(row => {
+                const listening = parseFloat(row.querySelector('[data-field="listening"]').value);
+                const reading = parseFloat(row.querySelector('[data-field="reading"]').value);
+                const listeningInput = row.querySelector('[data-field="listening"]');
+                const readingInput = row.querySelector('[data-field="reading"]');
+
+                // Chỉ kiểm tra nếu đã nhập giá trị
+                if (!isNaN(listening) && (listening < 0 || listening > 40)) {
+                    listeningInput.classList.add('invalid-input');
+                    invalidInputs.push('Listening');
+                    valid = false;
+                }
+
+                if (!isNaN(reading) && (reading < 0 || reading > 40)) {
+                    readingInput.classList.add('invalid-input');
+                    invalidInputs.push('Reading');
+                    valid = false;
+                }
+            });
+
+            if (!valid) {
+                FuiToast.error(`Điểm ${[...new Set(invalidInputs)].join(' và ')} phải trong khoảng 0-40`, {
+                    isClose: true,
+                    autoClose: 3000
+                });
+                return false;
+            }
+
+            // Xóa tất cả đánh dấu invalid
+            document.querySelectorAll('.invalid-input').forEach(el => el.classList.remove('invalid-input'));
+            document.querySelectorAll('.bg-red-100').forEach(el => {
+                el.classList.remove('bg-red-100');
+                el.classList.remove('text-red-700');
+            });
+
+            return true;
+        }
+        function setupInputValidation() {
+            document.querySelectorAll('#studentTable input[data-field="listening"]').forEach(input => {
+                input.addEventListener('input', function (e) {
+                    const value = parseFloat(this.value);
+                    if (!isNaN(value) && (value < 0 || value > 40)) {
+                        this.classList.add('invalid-input');
+                    } else {
+                        this.classList.remove('invalid-input');
+                    }
+                    updateListeningBandDisplay(this);
+                });
+            });
+
+            document.querySelectorAll('#studentTable input[data-field="reading"]').forEach(input => {
+                input.addEventListener('input', function (e) {
+                    const value = parseFloat(this.value);
+                    if (!isNaN(value) && (value < 0 || value > 40)) {
+                        this.classList.add('invalid-input');
+                    } else {
+                        this.classList.remove('invalid-input');
+                    }
+                    updateReadingBandDisplay(this);
+                });
+            });
+        }
+        // Lưu dữ liệu vào bảng IELTS
+        // Sửa hàm lưu dữ liệu
+
+        async function saveIELTSData() {
+            if (!validateData()) return;
+
+            try {
+                const rows = [];
+                const teacherName = document.getElementById('teacherName').value;
+                const currentDate = document.getElementById('entryDate').value || new Date().toISOString().split('T')[0];
+
+                // Thu thập dữ liệu từ các dòng
+                document.querySelectorAll('#studentTable tr[data-idkh]').forEach(row => {
+                    const idkh = row.dataset.idkh;
+                    const listening = row.querySelector('[data-field="listening"]').value;
+                    const reading = row.querySelector('[data-field="reading"]').value;
+                    const speaking = row.querySelector('[data-field="speaking"]').value;
+                    const writing = row.querySelector('[data-field="writing"]').value;
+                    const comment = row.querySelector('[data-field="comment"]').value || '';
+
+                    // Chuyển đổi sang số
+                    const listeningNum = parseFloat(listening) || 0;
+                    const readingNum = parseFloat(reading) || 0;
+                    const speakingNum = parseFloat(speaking) || 0;
+                    const writingNum = parseFloat(writing) || 0;
+
+                    // Lấy thông tin chi tiết
+                    const speakingDetails = row.querySelector('td:nth-child(4) .text-xs').textContent;
+                    const writingDetails = row.querySelector('td:nth-child(5) .text-xs').textContent;
+
+                    // Lấy giá trị từ chuỗi chi tiết
+                    const s_fl = parseFloat(speakingDetails.split('FL:')[1]?.split(',')[0]?.trim().replace('-', '0')) || 0;
+                    const s_lr = parseFloat(speakingDetails.split('LR:')[1]?.split(',')[0]?.trim().replace('-', '0')) || 0;
+                    const s_ga = parseFloat(speakingDetails.split('GA:')[1]?.split(',')[0]?.trim().replace('-', '0')) || 0;
+                    const s_pr = parseFloat(speakingDetails.split('PR:')[1]?.split(',')[0]?.trim().replace('-', '0')) || 0;
+
+                    const w_ta = parseFloat(writingDetails.split('TA:')[1]?.split(',')[0]?.trim().replace('-', '0')) || 0;
+                    const w_lr = parseFloat(writingDetails.split('LR:')[1]?.split(',')[0]?.trim().replace('-', '0')) || 0;
+                    const w_ga = parseFloat(writingDetails.split('GA:')[1]?.split(',')[0]?.trim().replace('-', '0')) || 0;
+                    const w_cc = parseFloat(writingDetails.split('CC:')[1]?.split(',')[0]?.trim().replace('-', '0')) || 0;
+
+                    // Chuyển đổi điểm số nếu có giá trị
+                    const listeningBand = listeningNum ? convertListeningToBand(listeningNum) : 0;
+                    const readingBand = readingNum ? convertReadingToBand(readingNum) : 0;
+
+                    // Tính điểm tổng nếu có đủ 4 kỹ năng
+                    let totalScore = 0;
+                    let roundedScore = 0;
+
+                    if (listeningNum && readingNum && speakingNum && writingNum) {
+                        totalScore = (listeningBand + readingBand + speakingNum + writingNum) / 4;
+                        roundedScore = Math.round(totalScore * 2) / 2;
+                    }
+
+                    // Chỉ lưu khi có ít nhất một giá trị
+                    if (listeningNum || readingNum || speakingNum || writingNum || comment) {
+                        rows.push({
+                            'KEY': idkh,
+                            'IDLOP': idlop,
+                            'Ngày nhập điểm': currentDate,
+                            'Listening': listeningNum,
+                            'Reading': readingNum,
+                            'Điểm Listening': listeningBand,
+                            'Speaking': speakingNum,
+                            'Điểm Reading': readingBand,
+                            'Writing': writingNum,
+                            'Tổng điểm': roundedScore.toFixed(1),
+                            'Nhận xét': comment,
+                            'Giáo viên': teacherName,
+                            'Speaking Fluency': s_fl,
+                            'Speaking Lexical': s_lr,
+                            'Speaking Grammar': s_ga,
+                            'Speaking Pronunciation': s_pr,
+                            'Writing Task Achievement': w_ta,
+                            'Writing Lexical Resource': w_lr,
+                            'Writing Grammar Accuracy': w_ga,
+                            'Writing Coherence/Cohesion': w_cc
+                        });
+                    }
+                });
+
+                // Kiểm tra nếu không có dữ liệu nào
+                if (rows.length === 0) {
+                    FuiToast.error('Không có dữ liệu nào được nhập để lưu', {
+                        isClose: true,
+                        autoClose: 3000
+                    });
+                    return;
+                }
+
+                // Hiển thị thông báo số học viên được lưu
+                const message = `Đang lưu điểm cho ${rows.length} học viên...`;
+
+                return FuiToast.promise(
+                    apiRequest('IELTS', 'Add', { Rows: rows }, { Properties: {} }),
+                    {
+                        loading: message,
+                        success: `Lưu điểm thành công cho ${rows.length} học viên!`,
+                        error: 'Lỗi khi lưu điểm. Vui lòng thử lại.',
+                    },
+                    { isClose: true }
+                );
+            } catch (error) {
+                console.error("Lỗi khi lưu dữ liệu:", error);
+                FuiToast.error(`Lỗi: ${error.message}`, {
+                    isClose: true,
+                    autoClose: 5000
+                });
+            }
+        }
+        // Thêm các hàm này vào code hiện tại
+        function updateListeningBandDisplay(input) {
+            const row = input.closest('tr');
+            const rawScore = parseFloat(input.value) || 0;
+            const band = convertListeningToBand(rawScore);
+
+            // Tạo hoặc cập nhật phần hiển thị
+            let display = row.querySelector('.listening-band');
+            if (!display) {
+                display = document.createElement('div');
+                display.className = 'listening-band text-xs text-gray-700 mt-1';
+                input.parentNode.appendChild(display);
+            }
+            display.textContent = `Band: ${band.toFixed(1)}`;
+
+            // Cập nhật điểm tổng
+            updateTotalScore(row);
+        }
+
+        function updateReadingBandDisplay(input) {
+            const row = input.closest('tr');
+            const rawScore = parseFloat(input.value) || 0;
+            const band = convertReadingToBand(rawScore);
+
+            // Tạo hoặc cập nhật phần hiển thị
+            let display = row.querySelector('.reading-band');
+            if (!display) {
+                display = document.createElement('div');
+                display.className = 'reading-band text-xs text-gray-700 mt-1';
+                input.parentNode.appendChild(display);
+            }
+            display.textContent = `Band: ${band.toFixed(1)}`;
+
+            // Cập nhật điểm tổng
+            updateTotalScore(row);
+        }
+        // Khởi tạo ứng dụng
+        // Sửa đổi hàm initApp để lấy teacherName từ URL
+        // Trong hàm initApp(), thêm đoạn đọc idkh từ URL
+        async function initApp() {
+            // Lấy tham số từ URL
+            const today1 = new Date();
+            const formattedDate = today1.toISOString().split('T')[0];
+            document.getElementById('entryDate').value = formattedDate;
+
+            const urlParams = new URLSearchParams(window.location.search);
+            idlop = urlParams.get('idlop');
+            const teacherNameFromUrl = urlParams.get('teacherName');
+            const idkhFromUrl = urlParams.get('idkh'); // Thêm dòng này để lấy idkh từ URL
+
+            if (!idlop) {
+                FuiToast.error('Thiếu thông tin lớp. Vui lòng kiểm tra URL.', {
+                    isClose: true,
+                    autoClose: 5000
+                });
+                return;
+            }
+
+            // Điền teacherName từ URL nếu có
+            if (teacherNameFromUrl) {
+                document.getElementById('teacherName').value = decodeURIComponent(teacherNameFromUrl);
+            }
+
+            // Tải dữ liệu
+            return FuiToast.promise(
+                Promise.all([fetchStudents(idkhFromUrl), fetchIELTSData(idkhFromUrl)]).then(() => {
+                    // Hiển thị tên lớp
+                    if (studentsData.length > 0 && studentsData[0]['Tên lớp']) {
+                        document.getElementById('className').textContent = studentsData[0]['Tên lớp'];
+                    } else {
+                        document.getElementById('className').textContent = 'Không có thông tin';
+                    }
+
+                    // Hiển thị danh sách học viên
+                    renderStudentTable();
+                    setupInputValidation();
+                }),
+                {
+                    loading: 'Đang tải dữ liệu...',
+                    success: 'Dữ liệu đã được tải thành công!',
+                    error: 'Có lỗi xảy ra khi tải dữ liệu. Vui lòng tải lại trang.',
+                },
+                { isClose: true }
+            );
+        }
+
+
+        // Đăng ký sự kiện
+        document.addEventListener('DOMContentLoaded', initApp);
+        document.getElementById('refreshButton').addEventListener('click', initApp);
+        document.getElementById('saveButton').addEventListener('click', saveIELTSData);
+        document.getElementById('saveSpeakingBtn').addEventListener('click', saveSpeakingScore);
+        document.getElementById('saveWritingBtn').addEventListener('click', saveWritingScore);
+
+        // Event listeners cho các input trong modal
+        document.querySelectorAll('#speakingModal select').forEach(select => {
+            select.addEventListener('change', calculateSpeakingScore);
+        });
+
+        document.querySelectorAll('#writingModal select').forEach(select => {
+            select.addEventListener('change', calculateWritingScore);
+        });
+
+        // Đóng modal
+        document.querySelectorAll('.closeModal').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.getElementById('speakingModal').classList.add('hidden');
+                document.getElementById('writingModal').classList.add('hidden');
+            });
+        });
+
+        // Đóng modal khi click ra ngoài
+        document.getElementById('speakingModal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('speakingModal')) {
+                document.getElementById('speakingModal').classList.add('hidden');
+            }
+        });
+
+        document.getElementById('writingModal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('writingModal')) {
+                document.getElementById('writingModal').classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+
+</html>
