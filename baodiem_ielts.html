@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IELTS Score Report</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 0;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Times New Roman', Times, serif;
+        }
+        .a4-page {
+            width: 210mm;
+            height: 297mm;
+            padding: 15mm;
+            margin: 0 auto;
+            background-color: white;
+            position: relative;
+            box-sizing: border-box;
+        }
+        @media print {
+            .a4-page {
+                width: 210mm;
+                height: 297mm;
+                margin: 0;
+                padding: 15mm;
+                page-break-after: avoid;
+            }
+            body {
+                background-color: white;
+            }
+            .print-button {
+                display: none;
+            }
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+        th, td {
+            font-size: 12pt;
+            vertical-align: middle;
+        }
+        .header {
+            border-bottom: 2px solid #00366f;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+        .section-title {
+            font-weight: bold;
+            font-size: 14pt;
+            color: #00366f;
+            padding: 5px 0;
+            margin: 12px 0 8px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .blue-text {
+            color: #00366f;
+        }
+        .progress-bar {
+            background-color: #00366f;
+            height: 18px;
+            width: 35px;
+            border-radius: 2px;
+        }
+        .signature-row td {
+            height: 60px;
+            vertical-align: bottom;
+        }
+        .print-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            background-color: #00366f;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: 'Times New Roman', Times, serif;
+        }
+        .score-box {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            padding: 10px 15px;
+            margin: 10px 0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .score-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .score-icon {
+            width: 24px;
+            margin-right: 10px;
+            text-align: center;
+        }
+        .score-label {
+            width: 80px;
+        }
+        .score-value {
+            margin-left: auto;
+            font-weight: bold;
+        }
+        .comments-box {
+            height: 70px;
+            border: 1px solid #e2e8f0;
+            margin-top: 10px;
+            border-radius: 4px;
+            padding: 5px;
+            background-color: #f8fafc;
+        }
+        .detail-table td {
+            padding: 6px 8px;
+        }
+        .footer {
+            margin-top: 20px;
+            text-align: right;
+        }
+        .logo {
+            font-size: 20pt;
+            font-weight: bold;
+            color: #00366f;
+        }
+        .candidate-info {
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+            background-color: #f8fafc;
+        }
+        .overall-score {
+            font-size: 16pt;
+            font-weight: bold;
+            color: #00366f;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 5px;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="a4-page">
+        <div class="header">
+            <table>
+                <tr>
+                    <td width="25%" class="logo"><img src="https://lea.edu.vn/wp-content/uploads/2023/07/removal.ai_9476a724-4e89-400f-a9e4-e6f4d9c4503d-logo-vector-1.png" width="70px" alt=""></td>
+                    <td width="50%" class="text-center blue-text" style="font-weight: bold; font-size: 18pt;">IELTS SCORE REPORT</td>
+                    <td width="25%"></td>
+                </tr>
+            </table>
+            <table>
+                <tr>
+                    <td colspan="3" class="blue-text" style="font-weight: bold; font-size: 14pt;">LEA ENGLISH CENTER</td>
+                </tr>
+                <tr>
+                    <td colspan="3" style="font-style: italic;">Hotline: 0274.9999.899 / 0985.914.415</td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="candidate-info">
+            <table>
+                <tr>
+                    <td width="50%"><b>Candidate's Name:</b> ________________</td>
+                    <td width="50%"><b>Test date:</b> ________________</td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="section-title">I. SCORES BY SKILLS AND OVERALL BAND</div>
+        <div class="score-box">
+            <div class="score-item">
+                <div class="score-icon">🎧</div>
+                <div class="score-label">Listening</div>
+                <div class="score-value">8.0</div>
+            </div>
+            <div class="score-item">
+                <div class="score-icon">📖</div>
+                <div class="score-label">Reading</div>
+                <div class="score-value">9.0</div>
+            </div>
+            <div class="score-item">
+                <div class="score-icon">✏️</div>
+                <div class="score-label">Writing</div>
+                <div class="score-value"><div class="progress-bar"></div></div>
+            </div>
+            <div class="score-item">
+                <div class="score-icon">🗣️</div>
+                <div class="score-label">Speaking</div>
+                <div class="score-value">7.5</div>
+            </div>
+            <div class="score-item overall-score">
+                <div class="score-icon"></div>
+                <div class="score-label">Overall</div>
+                <div class="score-value">8.0</div>
+            </div>
+        </div>
+
+        <div class="section-title">II. DETAILED SCORES</div>
+        <table class="detail-table">
+            <tr>
+                <td width="50%" style="font-weight: bold; color: #00366f;">Speaking (Scores based on 4 criteria):</td>
+                <td width="50%" style="font-weight: bold; color: #00366f;">Writing (Scores based on 4 criteria):</td>
+            </tr>
+            <tr>
+                <td>Fluency and Coherence: _____</td>
+                <td>Task Achievement / Task Response: _____</td>
+            </tr>
+            <tr>
+                <td>Lexical Resource: _____</td>
+                <td>Coherence and Cohesion: _____</td>
+            </tr>
+            <tr>
+                <td>Grammatical Range and Accuracy: _____</td>
+                <td>Lexical Resource: _____</td>
+            </tr>
+            <tr>
+                <td>Pronunciation: _____</td>
+                <td>Grammatical Range and Accuracy: _____</td>
+            </tr>
+            <tr>
+                <td><b>Total Speaking Score: _____</b></td>
+                <td><b>Total Writing Score: _____</b></td>
+            </tr>
+        </table>
+
+        <table class="detail-table" style="margin-top: 15px;">
+            <tr>
+                <td width="50%" style="font-weight: bold; color: #00366f;">Listening:</td>
+                <td width="50%" style="font-weight: bold; color: #00366f;">Reading:</td>
+            </tr>
+            <tr>
+                <td>Number of Correct Answers: _____</td>
+                <td>Number of Correct Answers: _____</td>
+            </tr>
+            <tr>
+                <td><b>Listening Band Score: _____</b></td>
+                <td><b>Reading Band Score: _____</b></td>
+            </tr>
+        </table>
+
+        <div class="section-title">III. COMMENTS</div>
+        <div class="comments-box"></div>
+
+        <div class="footer">
+            <table>
+                <tr>
+                    <td width="60%"></td>
+                    <td width="40%" class="text-center blue-text" style="font-weight: bold;">LEA ENGLISH CENTER</td>
+                </tr>
+                <tr class="signature-row">
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td class="text-center" style="border-top: 1px solid #00366f; padding-top: 5px;">Do Thi Kim Thuy</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <button class="print-button" onclick="window.print()">In báo cáo</button>
+
+    <script>
+        const appId = '237238ed-4230-4db1-ab50-e492cea9cdba';
+        const accessKey = 'V2-GAZkd-YsAqg-LBYbc-LRoOQ-2ZFzj-Imfj1-SodbW-9RtwD';
+        const region = 'www';
+
+        // Function to get URL parameters
+        function getUrlParameter(name) {
+            name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+            const regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+            const results = regex.exec(location.search);
+            return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+        }
+
+        // Function to fetch data from AppSheet API
+        async function fetchIeltsData() {
+            try {
+                const keyrow = getUrlParameter('keyrow');
+                if (!keyrow) {
+                    console.error('No keyrow parameter found in URL');
+                    return;
+                }
+
+                const response = await fetch(`https://${region}.appsheet.com/api/v2/apps/${appId}/tables/IELTS/Action`, {
+                    method: 'POST',
+                    headers: {
+                        'ApplicationAccessKey': accessKey,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        Action: 'Find',
+                        Properties: {},
+                        Selector: `[KEYROW]="${keyrow}"`
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                if (!Array.isArray(data) || data.length === 0) {
+                    throw new Error('No data found for the provided keyrow');
+                }
+
+                // Fill in the form with the retrieved data
+                populateScoreReport(data[0]);
+            } catch (error) {
+                console.error('Failed to fetch IELTS data:', error);
+            }
+        }
+
+        // Function to populate the score report with data
+        function populateScoreReport(data) {
+            // Remove progress bar and display actual Writing score
+            const writingScoreElement = document.querySelector('.score-item:nth-child(3) .score-value');
+            writingScoreElement.innerHTML = data['Writing'] || '';
+
+            // Candidate info
+            document.querySelector('.candidate-info td:nth-child(1)').innerHTML = `<b>Candidate's Name:</b> ${data['Tên KH'] || ''}`;
+            document.querySelector('.candidate-info td:nth-child(2)').innerHTML = `<b>Test date:</b> ${formatDate(data['Ngày nhập điểm']) || ''}`;
+
+            // Main scores
+            document.querySelector('.score-item:nth-child(1) .score-value').textContent = data['Điểm Listening'] || '';
+            document.querySelector('.score-item:nth-child(2) .score-value').textContent = data['Điểm Reading'] || '';
+            document.querySelector('.score-item:nth-child(4) .score-value').textContent = data['Speaking'] || '';
+            document.querySelector('.overall-score .score-value').textContent = data['Tổng điểm'] || '';
+
+            // Speaking details
+            const speakingDetails = document.querySelectorAll('.detail-table tr:nth-child(2) td:nth-child(1), .detail-table tr:nth-child(3) td:nth-child(1), .detail-table tr:nth-child(4) td:nth-child(1), .detail-table tr:nth-child(5) td:nth-child(1)');
+            speakingDetails[0].textContent = `Fluency and Coherence: ${data['Speaking Fluency'] || ''}`;
+            speakingDetails[1].textContent = `Lexical Resource: ${data['Speaking Lexical'] || ''}`;
+            speakingDetails[2].textContent = `Grammatical Range and Accuracy: ${data['Speaking Grammar'] || ''}`;
+            speakingDetails[3].textContent = `Pronunciation: ${data['Speaking Pronunciation'] || ''}`;
+            document.querySelector('.detail-table tr:nth-child(6) td:nth-child(1)').innerHTML = `<b>Total Speaking Score: ${data['Speaking'] || ''}</b>`;
+
+            // Writing details
+            const writingDetails = document.querySelectorAll('.detail-table tr:nth-child(2) td:nth-child(2), .detail-table tr:nth-child(3) td:nth-child(2), .detail-table tr:nth-child(4) td:nth-child(2), .detail-table tr:nth-child(5) td:nth-child(2)');
+            writingDetails[0].textContent = `Task Achievement / Task Response: ${data['Writing Task Achievement'] || ''}`;
+            writingDetails[1].textContent = `Coherence and Cohesion: ${data['Writing Coherence/Cohesion'] || ''}`;
+            writingDetails[2].textContent = `Lexical Resource: ${data['Writing Lexical Resource'] || ''}`;
+            writingDetails[3].textContent = `Grammatical Range and Accuracy: ${data['Writing Grammar Accuracy'] || ''}`;
+            document.querySelector('.detail-table tr:nth-child(6) td:nth-child(2)').innerHTML = `<b>Total Writing Score: ${data['Writing'] || ''}</b>`;
+
+            // Listening and Reading
+            document.querySelector('.detail-table:nth-child(8) tr:nth-child(2) td:nth-child(1)').textContent = `Number of Correct Answers: ${data['Điểm Listening'] || ''}`;
+            document.querySelector('.detail-table:nth-child(8) tr:nth-child(2) td:nth-child(2)').textContent = `Number of Correct Answers: ${data['Điểm Reading'] || ''}`;
+            document.querySelector('.detail-table:nth-child(8) tr:nth-child(3) td:nth-child(1)').innerHTML = `<b>Listening Band Score: ${data['Listening'] || ''}</b>`;
+            document.querySelector('.detail-table:nth-child(8) tr:nth-child(3) td:nth-child(2)').innerHTML = `<b>Reading Band Score: ${data['Reading'] || ''}</b>`;
+
+            // Comments
+            document.querySelector('.comments-box').textContent = data['Nhận xét'] || '';
+
+            // Teacher signature
+            document.querySelector('.footer tr:nth-child(3) td:nth-child(2)').textContent = data['Giáo viên'] || 'Do Thi Kim Thuy';
+        }
+
+        // Helper function to format date
+        function formatDate(dateString) {
+            if (!dateString) return '';
+            try {
+                const date = new Date(dateString);
+                return date.toLocaleDateString('vi-VN');
+            } catch (e) {
+                return dateString;
+            }
+        }
+
+        // Initialize when the page loads
+        document.addEventListener('DOMContentLoaded', fetchIeltsData);
+    </script>
+</body>
+</html>
