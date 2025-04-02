@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,11 +10,13 @@
             size: A4;
             margin: 0;
         }
+
         body {
             margin: 0;
             padding: 0;
             font-family: 'Times New Roman', Times, serif;
         }
+
         .a4-page {
             width: 210mm;
             height: 297mm;
@@ -23,6 +26,7 @@
             position: relative;
             box-sizing: border-box;
         }
+
         @media print {
             .a4-page {
                 width: 210mm;
@@ -31,26 +35,33 @@
                 padding: 15mm;
                 page-break-after: avoid;
             }
+
             body {
                 background-color: white;
             }
+
             .print-button {
                 display: none;
             }
         }
+
         table {
             border-collapse: collapse;
             width: 100%;
         }
-        th, td {
+
+        th,
+        td {
             font-size: 12pt;
             vertical-align: middle;
         }
+
         .header {
             border-bottom: 2px solid #00366f;
             padding-bottom: 10px;
             margin-bottom: 15px;
         }
+
         .section-title {
             font-weight: bold;
             font-size: 14pt;
@@ -59,19 +70,23 @@
             margin: 12px 0 8px 0;
             border-bottom: 1px solid #e2e8f0;
         }
+
         .blue-text {
             color: #00366f;
         }
+
         .progress-bar {
             background-color: #00366f;
             height: 18px;
             width: 35px;
             border-radius: 2px;
         }
+
         .signature-row td {
             height: 60px;
             vertical-align: bottom;
         }
+
         .print-button {
             position: fixed;
             bottom: 20px;
@@ -84,31 +99,37 @@
             cursor: pointer;
             font-family: 'Times New Roman', Times, serif;
         }
+
         .score-box {
             background-color: #f8fafc;
             border: 1px solid #e2e8f0;
             border-radius: 4px;
             padding: 10px 15px;
             margin: 10px 0;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
+
         .score-item {
             display: flex;
             align-items: center;
             margin-bottom: 8px;
         }
+
         .score-icon {
             width: 24px;
             margin-right: 10px;
             text-align: center;
         }
+
         .score-label {
             width: 80px;
         }
+
         .score-value {
             margin-left: auto;
             font-weight: bold;
         }
+
         .comments-box {
             height: 70px;
             border: 1px solid #e2e8f0;
@@ -117,18 +138,22 @@
             padding: 5px;
             background-color: #f8fafc;
         }
+
         .detail-table td {
             padding: 6px 8px;
         }
+
         .footer {
             margin-top: 20px;
             text-align: right;
         }
+
         .logo {
             font-size: 20pt;
             font-weight: bold;
             color: #00366f;
         }
+
         .candidate-info {
             border: 1px solid #e2e8f0;
             border-radius: 4px;
@@ -136,6 +161,7 @@
             margin: 10px 0;
             background-color: #f8fafc;
         }
+
         .overall-score {
             font-size: 16pt;
             font-weight: bold;
@@ -146,19 +172,24 @@
         }
     </style>
 </head>
+
 <body class="bg-gray-100">
     <div class="a4-page">
         <div class="header">
             <table>
                 <tr>
-                    <td width="25%" class="logo"><img src="https://lea.edu.vn/wp-content/uploads/2023/07/removal.ai_9476a724-4e89-400f-a9e4-e6f4d9c4503d-logo-vector-1.png" width="70px" alt=""></td>
-                    <td width="50%" class="text-center blue-text" style="font-weight: bold; font-size: 18pt;">IELTS SCORE REPORT</td>
+                    <td width="25%" class="logo"><img
+                            src="https://lea.edu.vn/wp-content/uploads/2023/07/removal.ai_9476a724-4e89-400f-a9e4-e6f4d9c4503d-logo-vector-1.png"
+                            width="70px" alt=""></td>
+                    <td width="50%" class="text-center blue-text" style="font-weight: bold; font-size: 18pt;">IELTS
+                        SCORE REPORT</td>
                     <td width="25%"></td>
                 </tr>
             </table>
             <table>
                 <tr>
-                    <td colspan="3" class="blue-text" style="font-weight: bold; font-size: 14pt;">LEA ENGLISH CENTER</td>
+                    <td colspan="3" class="blue-text" style="font-weight: bold; font-size: 14pt;">LEA ENGLISH CENTER
+                    </td>
                 </tr>
                 <tr>
                     <td colspan="3" style="font-style: italic;">Hotline: 0274.9999.899 / 0985.914.415</td>
@@ -190,7 +221,9 @@
             <div class="score-item">
                 <div class="score-icon">✏️</div>
                 <div class="score-label">Writing</div>
-                <div class="score-value"><div class="progress-bar"></div></div>
+                <div class="score-value">
+                    <div class="progress-bar"></div>
+                </div>
             </div>
             <div class="score-item">
                 <div class="score-icon">🗣️</div>
@@ -262,7 +295,8 @@
                 </tr>
                 <tr>
                     <td></td>
-                    <td class="text-center" style="border-top: 1px solid #00366f; padding-top: 5px;">Do Thi Kim Thuy</td>
+                    <td class="text-center" style="border-top: 1px solid #00366f; padding-top: 5px;">Do Thi Kim Thuy
+                    </td>
                 </tr>
             </table>
         </div>
@@ -277,10 +311,27 @@
 
         // Function to get URL parameters
         function getUrlParameter(name) {
-            name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
-            const regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
-            const results = regex.exec(location.search);
-            return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+            const url = window.location.href;
+            const keyrowIndex = url.indexOf('?keyrow=');
+
+            if (keyrowIndex === -1) {
+                return '';
+            }
+
+            const fullKeyrow = url.substring(keyrowIndex + 8); // +8 to skip '?keyrow='
+            console.log('Full keyrow parameter:', fullKeyrow);
+
+            // If you need just the first part before the &
+            // const keyrow = fullKeyrow.split('&')[0];
+
+            // If KEYROW is actually the combination of all parts
+            // Remove any trailing parameters if needed
+            const keyrow = fullKeyrow.includes('?') ?
+                fullKeyrow.substring(0, fullKeyrow.indexOf('?')) :
+                fullKeyrow;
+
+            console.log('Extracted keyrow:', keyrow);
+            return keyrow;
         }
 
         // Function to fetch data from AppSheet API
@@ -300,8 +351,9 @@
                     },
                     body: JSON.stringify({
                         Action: 'Find',
-                        Properties: {},
-                        Selector: `[KEYROW]="${keyrow}"`
+                        Properties: {
+                            Selector: `Filter(IELTS, [KEYROW] = "${keyrow}")`
+                        }
                     })
                 });
 
@@ -310,12 +362,20 @@
                 }
 
                 const data = await response.json();
+
                 if (!Array.isArray(data) || data.length === 0) {
                     throw new Error('No data found for the provided keyrow');
                 }
 
+                // Make sure we only get the record with the exact keyrow
+                const ieltsRecord = data.find(record => record['KEYROW'] === keyrow);
+
+                if (!ieltsRecord) {
+                    throw new Error('No exact match found for the provided keyrow');
+                }
+
                 // Fill in the form with the retrieved data
-                populateScoreReport(data[0]);
+                populateScoreReport(ieltsRecord);
             } catch (error) {
                 console.error('Failed to fetch IELTS data:', error);
             }
@@ -323,49 +383,61 @@
 
         // Function to populate the score report with data
         function populateScoreReport(data) {
-            // Remove progress bar and display actual Writing score
-            const writingScoreElement = document.querySelector('.score-item:nth-child(3) .score-value');
-            writingScoreElement.innerHTML = data['Writing'] || '';
+            try {
+                // Safely update elements with null checks
+                const updateElement = (selector, content) => {
+                    const element = document.querySelector(selector);
+                    if (element) {
+                        element.innerHTML = content;
+                    } else {
+                        console.warn(`Element not found: ${selector}`);
+                    }
+                };
 
-            // Candidate info
-            document.querySelector('.candidate-info td:nth-child(1)').innerHTML = `<b>Candidate's Name:</b> ${data['Tên KH'] || ''}`;
-            document.querySelector('.candidate-info td:nth-child(2)').innerHTML = `<b>Test date:</b> ${formatDate(data['Ngày nhập điểm']) || ''}`;
+                // Writing score
+                updateElement('.score-item:nth-child(3) .score-value', data['Writing'] || '');
 
-            // Main scores
-            document.querySelector('.score-item:nth-child(1) .score-value').textContent = data['Điểm Listening'] || '';
-            document.querySelector('.score-item:nth-child(2) .score-value').textContent = data['Điểm Reading'] || '';
-            document.querySelector('.score-item:nth-child(4) .score-value').textContent = data['Speaking'] || '';
-            document.querySelector('.overall-score .score-value').textContent = data['Tổng điểm'] || '';
+                // Candidate info
+                updateElement('.candidate-info td:nth-child(1)', `<b>Candidate's Name:</b> ${data['Tên KH'] || ''}`);
+                updateElement('.candidate-info td:nth-child(2)', `<b>Test date:</b> ${formatDate(data['Ngày nhập điểm']) || ''}`);
 
-            // Speaking details
-            const speakingDetails = document.querySelectorAll('.detail-table tr:nth-child(2) td:nth-child(1), .detail-table tr:nth-child(3) td:nth-child(1), .detail-table tr:nth-child(4) td:nth-child(1), .detail-table tr:nth-child(5) td:nth-child(1)');
-            speakingDetails[0].textContent = `Fluency and Coherence: ${data['Speaking Fluency'] || ''}`;
-            speakingDetails[1].textContent = `Lexical Resource: ${data['Speaking Lexical'] || ''}`;
-            speakingDetails[2].textContent = `Grammatical Range and Accuracy: ${data['Speaking Grammar'] || ''}`;
-            speakingDetails[3].textContent = `Pronunciation: ${data['Speaking Pronunciation'] || ''}`;
-            document.querySelector('.detail-table tr:nth-child(6) td:nth-child(1)').innerHTML = `<b>Total Speaking Score: ${data['Speaking'] || ''}</b>`;
+                // Main scores
+                updateElement('.score-item:nth-child(1) .score-value', data['Điểm Listening'] || '');
+                updateElement('.score-item:nth-child(2) .score-value', data['Điểm Reading'] || '');
+                updateElement('.score-item:nth-child(4) .score-value', data['Speaking'] || '');
+                updateElement('.overall-score .score-value', data['Tổng điểm'] || '');
 
-            // Writing details
-            const writingDetails = document.querySelectorAll('.detail-table tr:nth-child(2) td:nth-child(2), .detail-table tr:nth-child(3) td:nth-child(2), .detail-table tr:nth-child(4) td:nth-child(2), .detail-table tr:nth-child(5) td:nth-child(2)');
-            writingDetails[0].textContent = `Task Achievement / Task Response: ${data['Writing Task Achievement'] || ''}`;
-            writingDetails[1].textContent = `Coherence and Cohesion: ${data['Writing Coherence/Cohesion'] || ''}`;
-            writingDetails[2].textContent = `Lexical Resource: ${data['Writing Lexical Resource'] || ''}`;
-            writingDetails[3].textContent = `Grammatical Range and Accuracy: ${data['Writing Grammar Accuracy'] || ''}`;
-            document.querySelector('.detail-table tr:nth-child(6) td:nth-child(2)').innerHTML = `<b>Total Writing Score: ${data['Writing'] || ''}</b>`;
+                // Speaking details
+                updateElement('.detail-table tr:nth-child(2) td:nth-child(1)', `Fluency and Coherence: ${data['Speaking Fluency'] || ''}`);
+                updateElement('.detail-table tr:nth-child(3) td:nth-child(1)', `Lexical Resource: ${data['Speaking Lexical'] || ''}`);
+                updateElement('.detail-table tr:nth-child(4) td:nth-child(1)', `Grammatical Range and Accuracy: ${data['Speaking Grammar'] || ''}`);
+                updateElement('.detail-table tr:nth-child(5) td:nth-child(1)', `Pronunciation: ${data['Speaking Pronunciation'] || ''}`);
+                updateElement('.detail-table tr:nth-child(6) td:nth-child(1)', `<b>Total Speaking Score: ${data['Speaking'] || ''}</b>`);
 
-            // Listening and Reading
-            document.querySelector('.detail-table:nth-child(8) tr:nth-child(2) td:nth-child(1)').textContent = `Number of Correct Answers: ${data['Điểm Listening'] || ''}`;
-            document.querySelector('.detail-table:nth-child(8) tr:nth-child(2) td:nth-child(2)').textContent = `Number of Correct Answers: ${data['Điểm Reading'] || ''}`;
-            document.querySelector('.detail-table:nth-child(8) tr:nth-child(3) td:nth-child(1)').innerHTML = `<b>Listening Band Score: ${data['Listening'] || ''}</b>`;
-            document.querySelector('.detail-table:nth-child(8) tr:nth-child(3) td:nth-child(2)').innerHTML = `<b>Reading Band Score: ${data['Reading'] || ''}</b>`;
+                // Writing details
+                updateElement('.detail-table tr:nth-child(2) td:nth-child(2)', `Task Achievement / Task Response: ${data['Writing Task Achievement'] || ''}`);
+                updateElement('.detail-table tr:nth-child(3) td:nth-child(2)', `Coherence and Cohesion: ${data['Writing Coherence/Cohesion'] || ''}`);
+                updateElement('.detail-table tr:nth-child(4) td:nth-child(2)', `Lexical Resource: ${data['Writing Lexical Resource'] || ''}`);
+                updateElement('.detail-table tr:nth-child(5) td:nth-child(2)', `Grammatical Range and Accuracy: ${data['Writing Grammar Accuracy'] || ''}`);
+                updateElement('.detail-table tr:nth-child(6) td:nth-child(2)', `<b>Total Writing Score: ${data['Writing'] || ''}</b>`);
 
-            // Comments
-            document.querySelector('.comments-box').textContent = data['Nhận xét'] || '';
+                // Listening and Reading
+                updateElement('.detail-table:nth-child(8) tr:nth-child(2) td:nth-child(1)', `Number of Correct Answers: ${data['Điểm Listening'] || ''}`);
+                updateElement('.detail-table:nth-child(8) tr:nth-child(2) td:nth-child(2)', `Number of Correct Answers: ${data['Điểm Reading'] || ''}`);
+                updateElement('.detail-table:nth-child(8) tr:nth-child(3) td:nth-child(1)', `<b>Listening Band Score: ${data['Listening'] || ''}</b>`);
+                updateElement('.detail-table:nth-child(8) tr:nth-child(3) td:nth-child(2)', `<b>Reading Band Score: ${data['Reading'] || ''}</b>`);
 
-            // Teacher signature
-            document.querySelector('.footer tr:nth-child(3) td:nth-child(2)').textContent = data['Giáo viên'] || 'Do Thi Kim Thuy';
+                // Comments
+                updateElement('.comments-box', data['Nhận xét'] || '');
+
+                // Teacher signature
+                updateElement('.footer tr:nth-child(3) td:nth-child(2)', data['Giáo viên'] || 'Do Thi Kim Thuy');
+
+                console.log('Score report populated successfully');
+            } catch (error) {
+                console.error('Error in populateScoreReport:', error);
+            }
         }
-
         // Helper function to format date
         function formatDate(dateString) {
             if (!dateString) return '';
@@ -381,4 +453,5 @@
         document.addEventListener('DOMContentLoaded', fetchIeltsData);
     </script>
 </body>
+
 </html>
