@@ -409,8 +409,8 @@
         // Lấy dữ liệu học viên
         async function fetchStudents(a) {
             try {
-                const response = await apiRequest('Danh sách học viên', 'Find', {}, {
-                    Properties: { Selector: `Filter(Danh sách học viên, [IDKH] = "${a}")` }
+                const response = await apiRequest('KHCN', 'Find', {}, {
+                    Properties: { Selector: `Filter(KHCN, [IDKH] = "${a}")` }
                 });
                 studentsData = Array.isArray(response) ? response : [];
                 return studentsData;
