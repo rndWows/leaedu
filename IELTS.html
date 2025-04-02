@@ -52,15 +52,27 @@
             </div>
         </header>
 
+        <!-- Thêm vào phần thông tin lớp học -->
         <div class="bg-white rounded-lg shadow-md p-4 mb-6">
             <h2 class="text-xl font-semibold text-blue-600 mb-3">Thông tin lớp học</h2>
             <div id="classInfo" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div><strong>Lớp:</strong> <span id="className">Đang tải...</span></div>
                 <div><strong>Giáo viên nhận xét:</strong> <input type="text" id="teacherName"
                         class="border px-2 py-1 rounded w-64"></div>
-                <!-- Thay thế dòng hiển thị ngày hiện tại -->
                 <div><strong>Ngày nhập điểm:</strong> <input type="date" id="entryDate"
                         class="border px-2 py-1 rounded"></div>
+                <!-- Thêm phần tải file -->
+                <div>
+                    <strong>Tài liệu đính kèm:</strong>
+                    <div class="flex items-center mt-2">
+                        <input type="file" id="fileUpload" class="hidden" multiple>
+                        <button id="selectFileBtn"
+                            class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition">
+                            <i class="fas fa-upload mr-2"></i>Chọn file
+                        </button>
+                        <div id="fileList" class="ml-4 text-gray-700"></div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -351,6 +363,8 @@
         let idlop = '';
         let studentsData = [];
         let ieltsData = [];
+        // Biến lưu trữ các file đã chọn
+        let selectedFiles = [];
 
         // Hàm gọi API
         async function apiRequest(tableName, action, data, Properties) {
@@ -412,8 +426,44 @@
                 renderStudentTable();
             });
         });
+
+        // Thêm event listener cho nút chọn file
+        document.getElementById('selectFileBtn').addEventListener('click', function () {
+            document.getElementById('fileUpload').click();
+        });
+
+        // Xử lý khi chọn file
+        document.getElementById('fileUpload').addEventListener('change', function (e) {
+            // Lấy danh sách file từ input
+            const files = Array.from(e.target.files);
+            selectedFiles = files; // Lưu lại các file đã chọn
+
+            // Hiển thị danh sách file đã chọn
+            const fileListEl = document.getElementById('fileList');
+            fileListEl.innerHTML = '';
+
+            if (files.length > 0) {
+                const fileNames = files.map(file => file.name).join(', ');
+                fileListEl.textContent = `Đã chọn ${files.length} file: ${fileNames}`;
+            } else {
+                fileListEl.textContent = 'Chưa chọn file nào';
+            }
+        });
+
+        // Hàm chuyển đổi file thành Base64
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+            });
+        }
+
+
+
         // Lấy dữ liệu điểm IELTS
-        async function fetchIELTSData(a , b) {
+        async function fetchIELTSData(a, b) {
             try {
                 const response = await apiRequest('IELTS', 'Find', {}, {
                     Properties: { Selector: `Filter(IELTS,AND( [KEY] = "${a}" , [IDLOP]="${b}")  )` }
@@ -426,8 +476,8 @@
                 return [];
             }
         }
-   // Hiển thị dữ liệu học viên và điểm
-   function renderStudentTable() {
+        // Hiển thị dữ liệu học viên và điểm
+        function renderStudentTable() {
             const tableBody = document.querySelector('#studentTable tbody');
             tableBody.innerHTML = '';
 
@@ -543,7 +593,7 @@
             document.getElementById('writingModal').classList.remove('hidden');
         }
         // Mở modal Writing
-      
+
 
         // Tính điểm Speaking
         function calculateSpeakingScore() {
@@ -783,10 +833,11 @@
             try {
                 const rowsToAdd = [];
                 const rowsToUpdate = [];
+                const fileRowsToAdd = [];
                 const teacherName = document.getElementById('teacherName').value;
                 const currentDate = document.getElementById('entryDate').value || new Date().toISOString().split('T')[0];
 
-                // Chuyển đổi định dạng ngày từ YYYY-MM-DD sang MM/DD/YYYY cho KEYROW và display
+                // Chuyển đổi định dạng ngày từ YYYY-MM-DD sang MM/DD/YYYY cho display
                 const dateParts = currentDate.split('-');
                 const formattedDateForKeyrow = `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`; // DD/MM/YYYY cho KEYROW
                 const formattedDateForDisplay = `${dateParts[1]}/${dateParts[2]}/${dateParts[0]}`; // MM/DD/YYYY cho display
@@ -875,8 +926,39 @@
                     }
                 });
 
+                // Xử lý các file đã chọn (từ code cũ)
+                if (selectedFiles.length > 0) {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const idkhFromUrl = urlParams.get('idkh'); // Lấy idkh từ URL
+
+                    if (!idkhFromUrl) {
+                        throw new Error('Không tìm thấy thông tin ID khách hàng để lưu file');
+                    }
+
+                    const uploadPromises = selectedFiles.map(async file => {
+                        try {
+                            // Chuyển file thành base64
+                            const base64Data = await fileToBase64(file);
+
+                            // Chuẩn bị dữ liệu file
+                            return {
+                                'KEY': idkhFromUrl,
+                                'FILE': base64Data,
+                                'TÊN FILE': file.name
+                            };
+                        } catch (error) {
+                            console.error("Lỗi khi xử lý file:", file.name, error);
+                            throw error;
+                        }
+                    });
+
+                    // Đợi tất cả các file được xử lý
+                    const fileRows = await Promise.all(uploadPromises);
+                    fileRowsToAdd.push(...fileRows);
+                }
+
                 // Kiểm tra nếu không có dữ liệu nào
-                if (rowsToAdd.length === 0 && rowsToUpdate.length === 0) {
+                if (rowsToAdd.length === 0 && rowsToUpdate.length === 0 && fileRowsToAdd.length === 0) {
                     FuiToast.error('Không có dữ liệu nào được nhập để lưu', {
                         isClose: true,
                         autoClose: 3000
@@ -902,18 +984,38 @@
                     totalRows += rowsToUpdate.length;
                 }
 
-                // Hiển thị thông báo số học viên được lưu
-                const message = `Đang lưu điểm cho ${totalRows} học viên...`;
+                // Thêm file vào bảng File nếu có
+                if (fileRowsToAdd.length > 0) {
+                    promises.push(
+                        apiRequest('File', 'Add', { Rows: fileRowsToAdd }, { Properties: {} })
+                    );
+                    totalRows += fileRowsToAdd.length;
+                }
+
+                // Hiển thị thông báo số học viên được lưu và file
+                const message = `Đang lưu điểm cho ${totalRows} dữ liệu (bao gồm ${fileRowsToAdd.length} file)...`;
 
                 return FuiToast.promise(
                     Promise.all(promises),
                     {
                         loading: message,
-                        success: `Lưu điểm thành công cho ${totalRows} học viên!`,
-                        error: 'Lỗi khi lưu điểm. Vui lòng thử lại.',
+                        success: `Lưu thành công ${totalRows} dữ liệu (bao gồm ${fileRowsToAdd.length} file)!`,
+                        error: 'Lỗi khi lưu dữ liệu. Vui lòng thử lại.',
                     },
                     { isClose: true }
-                );
+                ).then(() => {
+                    // Xóa danh sách file đã chọn sau khi lưu thành công
+                    selectedFiles = [];
+                    document.getElementById('fileList').textContent = 'Chưa chọn file nào';
+                    document.getElementById('fileUpload').value = '';
+
+                    // Tải lại dữ liệu IELTS để cập nhật giao diện
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const idkhFromUrl = urlParams.get('idkh');
+                    return fetchIELTSData(idkhFromUrl, idlop).then(() => {
+                        renderStudentTable();
+                    });
+                });
             } catch (error) {
                 console.error("Lỗi khi lưu dữ liệu:", error);
                 FuiToast.error(`Lỗi: ${error.message}`, {
@@ -922,7 +1024,7 @@
                 });
             }
         }
-    
+
         // Thêm các hàm này vào code hiện tại
         function updateListeningBandDisplay(input) {
             const row = input.closest('tr');
@@ -988,7 +1090,7 @@
 
             // Tải dữ liệu
             return FuiToast.promise(
-                Promise.all([fetchStudents(idkhFromUrl), fetchIELTSData(idkhFromUrl , idlop)]).then(() => {
+                Promise.all([fetchStudents(idkhFromUrl), fetchIELTSData(idkhFromUrl, idlop)]).then(() => {
                     // Hiển thị tên lớp
                     if (studentsData.length > 0 && studentsData[0]['Tên lớp']) {
                         document.getElementById('className').textContent = studentsData[0]['Tên lớp'];
