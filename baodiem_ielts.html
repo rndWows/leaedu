@@ -131,7 +131,18 @@
         }
 
         .comments-box {
-            height: 70px;
+            height: auto !important;
+            /* Thay vì height: 70px; cố định */
+            min-height: 70px;
+            max-height: 300px;
+            /* Hoặc một giá trị phù hợp */
+            overflow-y: auto;
+            /* Cho phép cuộn nếu nội dung quá dài */
+            white-space: normal;
+            /* Đảm bảo text xuống dòng đúng */
+            word-wrap: break-word;
+            /* Xử lý từ dài */
+            margin-bottom: 20px;
             border: 1px solid #e2e8f0;
             margin-top: 10px;
             border-radius: 4px;
@@ -178,9 +189,8 @@
         <div class="header">
             <table>
                 <tr>
-                    <td width="25%" class="logo"><img
-                            src="https://lea.edu.vn/wp-content/uploads/2023/07/removal.ai_9476a724-4e89-400f-a9e4-e6f4d9c4503d-logo-vector-1.png"
-                            width="70px" alt=""></td>
+                    <td width="25%" class="logo"><img src="https://rndwows.github.io/leaedu/LOGO.jpg" width="70px"
+                            alt=""></td>
                     <td width="50%" class="text-center blue-text" style="font-weight: bold; font-size: 18pt;">IELTS
                         SCORE REPORT</td>
                     <td width="25%"></td>
@@ -422,10 +432,10 @@
                 updateElement('.detail-table tr:nth-child(6) td:nth-child(2)', `<b>Total Writing Score: ${data['Writing'] || ''}</b>`);
 
                 // Listening and Reading
-                updateElement('.detail-table:nth-child(8) tr:nth-child(2) td:nth-child(1)', `Number of Correct Answers: ${data['Điểm Listening'] || ''}`);
-                updateElement('.detail-table:nth-child(8) tr:nth-child(2) td:nth-child(2)', `Number of Correct Answers: ${data['Điểm Reading'] || ''}`);
-                updateElement('.detail-table:nth-child(8) tr:nth-child(3) td:nth-child(1)', `<b>Listening Band Score: ${data['Listening'] || ''}</b>`);
-                updateElement('.detail-table:nth-child(8) tr:nth-child(3) td:nth-child(2)', `<b>Reading Band Score: ${data['Reading'] || ''}</b>`);
+                updateElement('.detail-table:nth-of-type(2) tr:nth-child(2) td:nth-child(1)', `Number of Correct Answers: ${data['Listening'] || ''}`);
+                updateElement('.detail-table:nth-of-type(2) tr:nth-child(2) td:nth-child(2)', `Number of Correct Answers: ${data['Reading'] || ''}`);
+                updateElement('.detail-table:nth-of-type(2) tr:nth-child(3) td:nth-child(1)', `<b>Listening Band Score: ${data['Điểm Listening'] || ''}</b>`);
+                updateElement('.detail-table:nth-of-type(2) tr:nth-child(3) td:nth-child(2)', `<b>Reading Band Score: ${data['Điểm Reading'] || ''}</b>`);
 
                 // Comments
                 updateElement('.comments-box', data['Nhận xét'] || '');
